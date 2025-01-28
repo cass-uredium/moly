@@ -1,8 +1,10 @@
-use crate::data::*;
-use crate::open_ai::*;
-use anyhow::Result;
 use std::path::PathBuf;
 use std::sync::mpsc::Sender;
+
+use anyhow::Result;
+
+use crate::data::*;
+use crate::open_ai::*;
 
 #[derive(Clone, Debug)]
 pub enum FileDownloadResponse {

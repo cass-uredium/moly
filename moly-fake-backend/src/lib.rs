@@ -1,7 +1,8 @@
 pub mod fake_data;
 
-use moly_protocol::protocol::Command;
 use std::sync::mpsc;
+
+use moly_protocol::protocol::Command;
 
 pub struct Backend {
     pub command_sender: mpsc::Sender<Command>,

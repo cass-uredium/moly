@@ -3,10 +3,10 @@ use std::io::{self, Seek, Write};
 use std::path::Path;
 use std::sync::mpsc::Sender;
 use std::sync::{Arc, Mutex};
+use std::time::Duration;
 
 use moly_protocol::data::Model;
 use moly_protocol::protocol::FileDownloadResponse;
-use std::time::Duration;
 use tokio::time::timeout;
 
 use crate::backend_impls::DownloadControlCommand;
@@ -107,6 +107,7 @@ pub struct ModelFileDownloader {
 
 impl ModelFileDownloader {
     const DEFAULT_COUNTRY_CODE: &'static str = "default";
+
     pub fn new(
         client: reqwest::Client,
         sql_conn: Arc<Mutex<rusqlite::Connection>>,
@@ -262,9 +263,7 @@ impl ModelFileDownloader {
                 self.step,
                 report_fn,
             ) => r?,
-            r = listen_control_cmd => {
-                r
-            }
+            r = listen_control_cmd => r,
         };
 
         match r {

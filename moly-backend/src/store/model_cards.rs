@@ -1,11 +1,12 @@
-use chrono::{DateTime, Utc};
-use git2::{FetchOptions, ProxyOptions, Repository};
-use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::io::{self, Write};
 use std::path::{Path, PathBuf};
 use std::str;
 use std::sync::Arc;
+
+use chrono::{DateTime, Utc};
+use git2::{FetchOptions, ProxyOptions, Repository};
+use serde::{Deserialize, Serialize};
 
 fn do_fetch<'a>(
     repo: &'a git2::Repository,

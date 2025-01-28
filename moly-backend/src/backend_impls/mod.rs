@@ -1,26 +1,17 @@
-use std::{
-    path::{Path, PathBuf},
-    sync::{
-        mpsc::{Receiver, Sender},
-        Arc, Mutex,
-    },
-};
+use std::path::{Path, PathBuf};
+use std::sync::mpsc::{Receiver, Sender};
+use std::sync::{Arc, Mutex};
 
 use chrono::Utc;
-use moly_protocol::{
-    data::{DownloadedFile, FileID, Model, PendingDownload},
-    open_ai::{ChatRequestData, ChatResponse},
-    protocol::{
-        Command, FileDownloadResponse, LoadModelOptions, LoadModelResponse, LocalServerConfig,
-        LocalServerResponse,
-    },
+use moly_protocol::data::{DownloadedFile, FileID, Model, PendingDownload};
+use moly_protocol::open_ai::{ChatRequestData, ChatResponse};
+use moly_protocol::protocol::{
+    Command, FileDownloadResponse, LoadModelOptions, LoadModelResponse, LocalServerConfig,
+    LocalServerResponse,
 };
 
-use crate::store::{
-    self,
-    model_cards::{self, ModelCard, ModelCardManager},
-    ModelFileDownloader,
-};
+use crate::store::model_cards::{self, ModelCard, ModelCardManager};
+use crate::store::{self, ModelFileDownloader};
 
 mod api_server;
 mod chat_ui;
@@ -446,8 +437,13 @@ impl<Model: BackendModel + Send + 'static> BackendImpl<Model> {
 
         {
             let client = reqwest::Client::new();
-            let downloader =
-                ModelFileDownloader::new(client, sql_conn.clone(), control_tx.clone(),model_indexs.country_code.clone(), 0.1);
+            let downloader = ModelFileDownloader::new(
+                client,
+                sql_conn.clone(),
+                control_tx.clone(),
+                model_indexs.country_code.clone(),
+                0.1,
+            );
             async_rt.spawn(ModelFileDownloader::run_loop(
                 downloader,
                 max_download_threads.max(3),
@@ -529,14 +525,13 @@ impl<Model: BackendModel + Send + 'static> BackendImpl<Model> {
                 }
                 ModelManagementCommand::DownloadFile(file_id, tx) => {
                     //search model from remote
-                    let mut search_model_from_remote = || -> anyhow::Result<( crate::store::models::Model , crate::store::download_files::DownloadedFile,crate::store::model_cards::RemoteFile)> {
+                    let mut search_model_from_remote = || -> anyhow::Result<(crate::store::models::Model, crate::store::download_files::DownloadedFile, crate::store::model_cards::RemoteFile)> {
                         let (model_id, file) = file_id
                             .split_once("#")
                             .ok_or_else(|| anyhow::anyhow!("Illegal file_id"))?;
 
                         let index = self.model_indexs.get_index_by_id(model_id).ok_or(anyhow::anyhow!("No model found"))?.clone();
                         let remote_model = self.model_indexs.load_model_card(&index)?;
-                    
 
                         let remote_file = remote_model
                             .files
@@ -573,12 +568,12 @@ impl<Model: BackendModel + Send + 'static> BackendImpl<Model> {
                             quantization: remote_file.quantization,
                             prompt_template: remote_model.prompt_template,
                             reverse_prompt: remote_model.reverse_prompt,
-                            context_size:remote_model.context_size,
+                            context_size: remote_model.context_size,
                             downloaded: false,
                             file_size: 0,
                             download_dir: self.models_dir.to_string_lossy().to_string(),
                             downloaded_at: Utc::now(),
-                            tags:remote_file.tags,
+                            tags: remote_file.tags,
                             featured: false,
                             sha256: remote_file.sha256.unwrap_or_default(),
                         };
@@ -587,8 +582,8 @@ impl<Model: BackendModel + Send + 'static> BackendImpl<Model> {
                     };
 
                     match search_model_from_remote() {
-                        Ok((model, file,remote_file)) => {
-                            let _ = self.download_tx.send((model, file,remote_file, tx));
+                        Ok((model, file, remote_file)) => {
+                            let _ = self.download_tx.send((model, file, remote_file, tx));
                         }
                         Err(e) => {
                             let _ = tx.send(Err(e));
