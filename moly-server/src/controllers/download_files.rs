@@ -2,7 +2,7 @@ use std::path::Path;
 
 use crate::models;
 
-pub fn get_all_download_file(
+pub fn get_downloaded_files(
     conn: &rusqlite::Connection,
 ) -> rusqlite::Result<Vec<moly_protocol::data::DownloadedFile>> {
     let files = models::DownloadedFile::get_finished(conn)?;
@@ -63,7 +63,7 @@ pub fn get_all_download_file(
     Ok(downloaded_files)
 }
 
-pub fn get_all_pending_downloads(
+pub fn get_pending_downloads(
     conn: &rusqlite::Connection,
 ) -> rusqlite::Result<Vec<moly_protocol::data::PendingDownload>> {
     let files = models::DownloadedFile::get_pending(conn)?;
