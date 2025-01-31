@@ -607,7 +607,7 @@ impl<Model: BackendModel + Send + 'static> BackendImpl<Model> {
                         let _ = models::DownloadedFile::remove(&file_id, &conn);
                     }
                     let _ = crate::controllers::download_files::remove_downloaded_file(
-                        self.models_dir.to_string_lossy().to_string(),
+                        &self.models_dir,
                         file_id,
                     );
 
@@ -621,7 +621,7 @@ impl<Model: BackendModel + Send + 'static> BackendImpl<Model> {
                     }
 
                     let _ = crate::controllers::download_files::remove_downloaded_file(
-                        self.models_dir.to_string_lossy().to_string(),
+                        &self.models_dir,
                         file_id,
                     );
                     let _ = tx.send(Ok(()));
