@@ -128,16 +128,16 @@ pub fn get_pending_downloads(
     Ok(result)
 }
 
-pub fn remove_downloaded_file(
-    models_dir: String,
+pub fn remove_downloaded_file<D: AsRef<Path>>(
+    models_dir: D,
     file_id: moly_protocol::data::FileId,
 ) -> anyhow::Result<()> {
-    let (model_id, file) = file_id
+    let (model_id, filename) = file_id
         .split_once("#")
         .ok_or_else(|| anyhow::anyhow!("Illegal file_id"))?;
 
-    let filename = format!("{}/{}/{}", models_dir, model_id, file);
+    let file = models_dir.as_ref().join(model_id).join(filename);
 
-    log::info!("Removing file {}", filename);
-    Ok(std::fs::remove_file(filename)?)
+    log::info!("Removing file {}", file.to_string_lossy());
+    Ok(std::fs::remove_file(file)?)
 }
