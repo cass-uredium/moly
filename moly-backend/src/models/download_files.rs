@@ -4,6 +4,54 @@ use std::sync::Arc;
 use chrono::{DateTime, Utc};
 use rusqlite::Row;
 
+pub fn create_table_download_files(conn: &rusqlite::Connection) -> rusqlite::Result<()> {
+    conn.execute_batch(
+        "BEGIN;
+        CREATE TABLE IF NOT EXISTS download_files (
+            id TEXT PRIMARY KEY,
+            model_id TEXT NOT NULL,
+            name TEXT NOT NULL,
+            size TEXT NOT NULL,
+            quantization TEXT NOT NULL,
+            prompt_template TEXT DEFAULT '',
+            reverse_prompt TEXT DEFAULT '',
+            context_size INTEGER DEFAULT 1024,
+            downloaded INTEGER DEFAULT 0,
+            file_size UNSIGNED BIG INT DEFAULT 0,
+            download_dir TEXT NOT NULL,
+            downloaded_at TEXT NOT NULL,
+            tags TEXT NOT NULL,
+            featured INTEGER DEFAULT 0,
+            sha256 TEXT NOT NULL DEFAULT ''
+        );
+        CREATE INDEX IF NOT EXISTS index_model_id ON download_files (model_id);
+        CREATE INDEX IF NOT EXISTS index_downloaded ON download_files (downloaded);
+        COMMIT;",
+    )?;
+
+    check_context_size(conn)?;
+
+    Ok(())
+}
+
+fn check_context_size(conn: &rusqlite::Connection) -> rusqlite::Result<()> {
+    let mut stmt = conn.prepare("PRAGMA table_info(download_files)")?;
+    let mut rows = stmt.query_map([], |row| {
+        let name: String = row.get(1)?;
+        Ok(name)
+    })?;
+
+    let check = rows.find(|row| matches!(row.as_deref(), Ok("context_size")));
+
+    if check.is_none() {
+        conn.execute(
+            "ALTER TABLE download_files ADD COLUMN context_size INT DEFAULT 1024",
+            [],
+        )?;
+    }
+    Ok(())
+}
+
 #[derive(Debug, Default, PartialEq, Eq, Clone)]
 pub struct DownloadedFile {
     pub id: Arc<String>,
@@ -167,54 +215,6 @@ impl DownloadedFile {
         )?;
         Ok(())
     }
-}
-
-fn check_context_size(conn: &rusqlite::Connection) -> rusqlite::Result<()> {
-    let mut stmt = conn.prepare("PRAGMA table_info(download_files)")?;
-    let mut rows = stmt.query_map([], |row| {
-        let name: String = row.get(1)?;
-        Ok(name)
-    })?;
-
-    let check = rows.find(|row| matches!(row.as_deref(), Ok("context_size")));
-
-    if check.is_none() {
-        conn.execute(
-            "ALTER TABLE download_files ADD COLUMN context_size INT DEFAULT 1024",
-            [],
-        )?;
-    }
-    Ok(())
-}
-
-pub fn create_table_download_files(conn: &rusqlite::Connection) -> rusqlite::Result<()> {
-    conn.execute_batch(
-        "BEGIN;
-        CREATE TABLE IF NOT EXISTS download_files (
-            id TEXT PRIMARY KEY,
-            model_id TEXT NOT NULL,
-            name TEXT NOT NULL,
-            size TEXT NOT NULL,
-            quantization TEXT NOT NULL,
-            prompt_template TEXT DEFAULT '',
-            reverse_prompt TEXT DEFAULT '',
-            context_size INTEGER DEFAULT 1024,
-            downloaded INTEGER DEFAULT 0,
-            file_size UNSIGNED BIG INT DEFAULT 0,
-            download_dir TEXT NOT NULL,
-            downloaded_at TEXT NOT NULL,
-            tags TEXT NOT NULL,
-            featured INTEGER DEFAULT 0,
-            sha256 TEXT NOT NULL DEFAULT ''
-        );
-        CREATE INDEX IF NOT EXISTS index_model_id ON download_files (model_id);
-        CREATE INDEX IF NOT EXISTS index_downloaded ON download_files (downloaded);
-        COMMIT;",
-    )?;
-
-    check_context_size(conn)?;
-
-    Ok(())
 }
 
 #[test]

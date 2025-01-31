@@ -15,7 +15,7 @@ use wasmedge_sdk::error::{CoreError, CoreExecutionError};
 use wasmedge_sdk::wasi::WasiModule;
 use wasmedge_sdk::{CallingFrame, ImportObject, Instance, Module, Store, Vm, WasmValue};
 
-use crate::store::download_files::DownloadedFile;
+use crate::models::DownloadedFile;
 
 #[derive(Debug)]
 pub enum TokenError {

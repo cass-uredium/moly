@@ -4,7 +4,7 @@ use std::sync::Arc;
 use chrono::{DateTime, Utc};
 use rusqlite::params;
 
-use super::model_cards::Author;
+use super::Author;
 
 pub fn create_table_models(conn: &rusqlite::Connection) -> rusqlite::Result<()> {
     conn.execute(
@@ -26,6 +26,7 @@ pub fn create_table_models(conn: &rusqlite::Connection) -> rusqlite::Result<()> 
         )",
         (),
     )?;
+
     Ok(())
 }
 

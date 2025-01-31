@@ -1,5 +1,6 @@
-mod backend_impls;
-mod store;
+mod controllers;
+mod models;
+mod services;
 
 use std::path::Path;
 use std::sync::mpsc;
@@ -22,7 +23,7 @@ impl Backend {
     ) -> Backend {
         #[cfg(debug_assertions)]
         env_logger::init();
-        let command_sender = backend_impls::LlamaEdgeApiServerBackend::build_command_sender(
+        let command_sender = services::LlamaEdgeApiServerBackend::build_command_sender(
             app_data_dir,
             models_dir,
             max_download_threads,
