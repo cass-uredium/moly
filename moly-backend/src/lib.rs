@@ -1,6 +1,7 @@
 mod controllers;
 mod models;
 mod services;
+mod utils;
 
 use std::path::Path;
 use std::sync::mpsc;
