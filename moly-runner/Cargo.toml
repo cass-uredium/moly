@@ -5,13 +5,13 @@ edition = "2021"
 description = "A companion app that runs before Moly to handle wasmedge configuration and more"
 
 [dependencies]
-directories = "5.0.1"
+directories = "6.0.0"
 
 [target.'cfg(windows)'.dependencies]
 ## For running a powershell script, which downloads and extracts/installs WasmEdge
 powershell_script = "1.1.0"
 ## For showing a dialog box modal when the CPU is unsupported.
-windows-sys = { version = "0.52", features = ["Win32_UI_WindowsAndMessaging", "Win32_Foundation"] }
+windows-sys = { version = "0.59", features = ["Win32_UI_WindowsAndMessaging", "Win32_Foundation"] }
 
 [[bin]]
 name = "moly"

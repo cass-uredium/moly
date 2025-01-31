@@ -31,19 +31,19 @@ moly-fake-backend = { path = "moly-fake-backend" }
 makepad-widgets = { git = "https://github.com/makepad/makepad", branch = "rik" }
 makepad-code-editor = { git = "https://github.com/makepad/makepad", branch = "rik" }
 
-robius-open = "0.1.1"
+robius-open = "0.1.2"
 robius-url-handler = { git = "https://github.com/project-robius/robius-url-handler" }
 
 chrono = "0.4"
-directories = "5.0.1"
-unicode-segmentation = "1.10.1"
+directories = "6.0.0"
+unicode-segmentation = "1.12.0"
 anyhow = "1.0"
 serde_json = "1.0"
-serde = { version = "1.0.197", features = ["derive"] }
+serde = { version = "1.0", features = ["derive"] }
 lipsum = "0.9"
 rand = "0.8.5"
 
-rfd = "0.14.1"
+rfd = "0.15.2"
 
 
 ## Configuration for `cargo packager`
