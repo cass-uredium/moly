@@ -137,10 +137,10 @@ fn normal_merge(
 fn do_merge<'a>(
     repo: &'a Repository,
     remote_branch: &str,
-    fetch_commit: git2::AnnotatedCommit<'a>,
+    fetch_commit: &git2::AnnotatedCommit<'a>,
 ) -> Result<(), git2::Error> {
     // 1. do a merge analysis
-    let analysis = repo.merge_analysis(&[&fetch_commit])?;
+    let analysis = repo.merge_analysis(&[fetch_commit])?;
 
     // 2. Do the appropriate merge
     if analysis.0.is_fast_forward() {
@@ -149,7 +149,7 @@ fn do_merge<'a>(
         let refname = format!("refs/heads/{}", remote_branch);
         match repo.find_reference(&refname) {
             Ok(mut r) => {
-                fast_forward(repo, &mut r, &fetch_commit)?;
+                fast_forward(repo, &mut r, fetch_commit)?;
             }
             Err(_) => {
                 // The branch doesn't exist so just set the reference to the
@@ -173,7 +173,7 @@ fn do_merge<'a>(
     } else if analysis.0.is_normal() {
         // do a normal merge
         let head_commit = repo.reference_to_annotated_commit(&repo.head()?)?;
-        normal_merge(repo, &head_commit, &fetch_commit)?;
+        normal_merge(repo, &head_commit, fetch_commit)?;
     } else {
         log::debug!("Nothing to do...");
     }
@@ -183,7 +183,7 @@ fn do_merge<'a>(
 pub fn pull(repo: &Repository, remote_name: &str, remote_branch: &str) -> Result<(), git2::Error> {
     let mut remote = repo.find_remote(remote_name)?;
     let fetch_commit = do_fetch(repo, &[remote_branch], &mut remote)?;
-    do_merge(repo, remote_branch, fetch_commit)
+    do_merge(repo, remote_branch, &fetch_commit)
 }
 
 pub fn open_or_clone<P: AsRef<Path>>(url: &str, repo_path: P) -> Result<Repository, git2::Error> {
