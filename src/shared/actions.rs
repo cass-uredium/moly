@@ -1,16 +1,16 @@
 use makepad_widgets::{ActionDefaultRef, DefaultNone};
-use moly_protocol::data::FileID;
+use moly_protocol::data::FileId;
 
 #[derive(Clone, DefaultNone, Debug)]
 pub enum ChatAction {
-    Start(FileID),
+    Start(FileId),
     None,
 }
 
 #[derive(Clone, DefaultNone, Debug)]
 pub enum DownloadAction {
-    Play(FileID),
-    Pause(FileID),
-    Cancel(FileID),
+    Play(FileId),
+    Pause(FileId),
+    Cancel(FileId),
     None,
 }

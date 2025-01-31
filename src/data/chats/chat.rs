@@ -1,7 +1,7 @@
 use anyhow::{anyhow, Result};
 use makepad_widgets::Cx;
 use moly_backend::Backend;
-use moly_protocol::data::{File, FileID};
+use moly_protocol::data::{File, FileId};
 use moly_protocol::open_ai::*;
 use moly_protocol::protocol::Command;
 use std::path::PathBuf;
@@ -52,7 +52,7 @@ enum TitleState {
 #[derive(Serialize, Deserialize)]
 struct ChatData {
     id: ChatID,
-    last_used_file_id: Option<FileID>,
+    last_used_file_id: Option<FileId>,
     system_prompt: Option<String>,
     messages: Vec<ChatMessage>,
     title: String,
@@ -91,7 +91,7 @@ impl Default for ChatInferenceParams {
 pub struct Chat {
     /// Unix timestamp in ms.
     pub id: ChatID,
-    pub last_used_file_id: Option<FileID>,
+    pub last_used_file_id: Option<FileId>,
     pub messages: Vec<ChatMessage>,
     pub is_streaming: bool,
     pub inferences_params: ChatInferenceParams,

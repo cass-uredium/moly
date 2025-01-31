@@ -5,7 +5,7 @@ use download::{Download, DownloadFileAction, DownloadState};
 use makepad_widgets::Action;
 use moly_backend::Backend;
 use moly_protocol::{
-    data::{DownloadedFile, File, FileID, Model, PendingDownload, PendingDownloadsStatus},
+    data::{DownloadedFile, File, FileId, Model, PendingDownload, PendingDownloadsStatus},
     protocol::Command,
 };
 use std::{collections::HashMap, rc::Rc, sync::mpsc::channel};
@@ -19,7 +19,7 @@ pub struct Downloads {
     pub backend: Rc<Backend>,
     pub downloaded_files: Vec<DownloadedFile>,
     pub pending_downloads: Vec<PendingDownload>,
-    pub current_downloads: HashMap<FileID, Download>,
+    pub current_downloads: HashMap<FileId, Download>,
     pub pending_notifications: Vec<DownloadPendingNotification>,
 }
 
@@ -112,7 +112,7 @@ impl Downloads {
     }
 
     /// Get a known file. No matter it's status.
-    pub fn get_file(&self, file_id: &FileID) -> Option<&File> {
+    pub fn get_file(&self, file_id: &FileId) -> Option<&File> {
         // Bet this should not be different things just because they have attached status specific data.
 
         self.downloaded_files
@@ -130,7 +130,7 @@ impl Downloads {
     }
 
     /// Get a known model. No matter the status of it's related file.
-    pub fn get_model_by_file_id(&self, file_id: &FileID) -> Option<&Model> {
+    pub fn get_model_by_file_id(&self, file_id: &FileId) -> Option<&Model> {
         self.downloaded_files
             .iter()
             .find(|f| f.file.id == *file_id)
@@ -144,7 +144,7 @@ impl Downloads {
         // .or_else(|| self.current_downloads.get(file_id).map(|d| &d.model))
     }
 
-    pub fn pause_download_file(&mut self, file_id: &FileID) {
+    pub fn pause_download_file(&mut self, file_id: &FileId) {
         let Some(current_download) = self.current_downloads.get(file_id) else {
             return;
         };
@@ -174,7 +174,7 @@ impl Downloads {
         };
     }
 
-    pub fn cancel_download_file(&mut self, file_id: &FileID) {
+    pub fn cancel_download_file(&mut self, file_id: &FileId) {
         if let Some(current_download) = self.current_downloads.get(file_id) {
             if current_download.is_initializing() {
                 return;
@@ -199,7 +199,7 @@ impl Downloads {
         };
     }
 
-    pub fn delete_file(&mut self, file_id: FileID) -> Result<()> {
+    pub fn delete_file(&mut self, file_id: FileId) -> Result<()> {
         let (tx, rx) = channel();
         self.backend
             .as_ref()
@@ -241,7 +241,7 @@ impl Downloads {
     /// This function is invoked after handling a download file action. It updates the
     /// download progress and state of the downloads, based in the active downloads
     /// but also retrieving fresh data from the backend.
-    pub fn refresh_downloads_data(&mut self) -> Vec<FileID> {
+    pub fn refresh_downloads_data(&mut self) -> Vec<FileId> {
         let mut completed_download_ids = Vec::new();
 
         for (id, download) in &mut self.current_downloads {

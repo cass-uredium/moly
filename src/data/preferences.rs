@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use moly_protocol::data::FileID;
+use moly_protocol::data::FileId;
 use serde::{Deserialize, Serialize};
 
 use super::filesystem::{
@@ -10,7 +10,7 @@ const PREFERENCES_FILENAME: &str = "preferences.json";
 
 #[derive(Serialize, Deserialize, Debug, Default, Clone)]
 pub struct Preferences {
-    pub current_chat_model: Option<FileID>,
+    pub current_chat_model: Option<FileId>,
     #[serde(default)]
     pub downloaded_files_dir: PathBuf,
 }
@@ -44,7 +44,7 @@ impl Preferences {
         }
     }
 
-    pub fn set_current_chat_model(&mut self, file: FileID) {
+    pub fn set_current_chat_model(&mut self, file: FileId) {
         self.current_chat_model = Some(file);
         self.save();
     }

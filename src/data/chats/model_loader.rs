@@ -1,7 +1,7 @@
 use anyhow::anyhow;
 use makepad_widgets::Cx;
 use moly_protocol::{
-    data::FileID,
+    data::FileId,
     protocol::{Command, LoadModelOptions, LoadModelResponse, LoadedModelInfo},
 };
 use std::{
@@ -29,7 +29,7 @@ pub enum ModelLoaderStatus {
 #[derive(Default)]
 struct ModelLoaderInner {
     status: ModelLoaderStatus,
-    file_id: Option<FileID>,
+    file_id: Option<FileId>,
 }
 
 /// Unit for handling the non-blocking loading of models across threads.
@@ -43,7 +43,7 @@ impl ModelLoader {
 
     pub fn load(
         &mut self,
-        file_id: FileID,
+        file_id: FileId,
         command_sender: Sender<Command>,
         override_port: Option<u16>,
     ) -> Result<(), anyhow::Error> {
@@ -93,7 +93,7 @@ impl ModelLoader {
 
     pub fn load_async(
         &mut self,
-        file_id: FileID,
+        file_id: FileId,
         command_sender: Sender<Command>,
         override_port: Option<u16>,
     ) {
@@ -110,11 +110,11 @@ impl ModelLoader {
         Cx::post_action(ModelLoaderStatusChanged);
     }
 
-    fn set_file_id(&mut self, file_id: Option<FileID>) {
+    fn set_file_id(&mut self, file_id: Option<FileId>) {
         self.0.lock().unwrap().file_id = file_id;
     }
 
-    pub fn file_id(&self) -> Option<FileID> {
+    pub fn file_id(&self) -> Option<FileId> {
         self.0.lock().unwrap().file_id.clone()
     }
 
@@ -144,7 +144,7 @@ impl ModelLoader {
 
     /// Get the file id of the model that is currently being loaded.
     /// Returns `None` if the model loader is not at a loading state.
-    pub fn get_loading_file_id(&self) -> Option<FileID> {
+    pub fn get_loading_file_id(&self) -> Option<FileId> {
         if self.is_loading() {
             return self.file_id();
         }

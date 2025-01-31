@@ -9,7 +9,7 @@ use anyhow::Result;
 use chrono::{DateTime, Utc};
 use makepad_widgets::{Action, ActionDefaultRef, DefaultNone};
 use moly_backend::Backend;
-use moly_protocol::data::{Author, DownloadedFile, File, FileID, Model, ModelID, PendingDownload};
+use moly_protocol::data::{Author, DownloadedFile, File, FileId, Model, ModelId, PendingDownload};
 use std::rc::Rc;
 
 pub const DEFAULT_MAX_DOWNLOAD_THREADS: usize = 3;
@@ -30,7 +30,7 @@ pub struct FileWithDownloadInfo {
 
 #[derive(Clone, Debug)]
 pub struct ModelWithDownloadInfo {
-    pub model_id: ModelID,
+    pub model_id: ModelId,
     pub name: String,
     pub summary: String,
     pub size: String,
@@ -255,7 +255,7 @@ impl Store {
         }
     }
 
-    pub fn delete_file(&mut self, file_id: FileID) -> Result<()> {
+    pub fn delete_file(&mut self, file_id: FileId) -> Result<()> {
         self.downloads.delete_file(file_id.clone())?;
         self.search
             .update_downloaded_file_in_search_results(&file_id, false);

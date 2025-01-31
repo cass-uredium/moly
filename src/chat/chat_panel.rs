@@ -1,5 +1,5 @@
 use makepad_widgets::*;
-use moly_protocol::data::FileID;
+use moly_protocol::data::FileId;
 use std::cell::{Ref, RefCell, RefMut};
 
 use crate::{
@@ -915,7 +915,7 @@ impl ChatPanel {
 
 #[derive(Clone, DefaultNone, Debug)]
 pub enum ChatPanelAction {
-    UnloadIfActive(FileID),
+    UnloadIfActive(FileId),
     NavigateToDiscover,
     None,
 }

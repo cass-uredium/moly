@@ -153,7 +153,7 @@ impl Chats {
     /// one but references a no longer existing (deleted) file.
     ///
     /// If the fallback is used, the chat is updated with this, and persisted.
-    pub fn get_or_init_chat_file_id(&self, chat: &mut Chat) -> Option<FileID> {
+    pub fn get_or_init_chat_file_id(&self, chat: &mut Chat) -> Option<FileId> {
         if let Some(file_id) = chat.last_used_file_id.clone() {
             Some(file_id)
         } else {

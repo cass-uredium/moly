@@ -130,7 +130,7 @@ pub fn get_all_pending_downloads(
 
 pub fn remove_downloaded_file(
     models_dir: String,
-    file_id: moly_protocol::data::FileID,
+    file_id: moly_protocol::data::FileId,
 ) -> anyhow::Result<()> {
     let (model_id, file) = file_id
         .split_once("#")
