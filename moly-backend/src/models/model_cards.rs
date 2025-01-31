@@ -44,7 +44,7 @@ impl ModelCard {
             .iter()
             .map(|m| m.id.clone())
             .collect::<Vec<_>>();
-        let files = DownloadedFile::get_by_models(conn, &model_ids)?;
+        let files = DownloadedFile::get_downloaded_by_models(conn, &model_ids)?;
 
         fn to_file(
             model_id: &str,

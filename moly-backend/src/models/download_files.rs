@@ -176,7 +176,7 @@ impl DownloadedFile {
         Ok(files)
     }
 
-    pub fn get_by_models<S: AsRef<str> + rusqlite::ToSql>(
+    pub fn get_downloaded_by_models<S: AsRef<str> + rusqlite::ToSql>(
         conn: &rusqlite::Connection,
         ids: &[S],
     ) -> rusqlite::Result<HashMap<Arc<String>, Self>> {

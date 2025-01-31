@@ -630,7 +630,7 @@ impl<Model: BackendModel + Send + 'static> BackendImpl<Model> {
                 ModelManagementCommand::GetDownloadedFiles(tx) => {
                     let downloads = {
                         let conn = self.sql_conn.lock().unwrap();
-                        crate::controllers::download_files::get_all_download_file(&conn)
+                        crate::controllers::download_files::get_downloaded_files(&conn)
                             .map_err(|e| anyhow::anyhow!("get download file error: {e}"))
                     };
 
@@ -640,7 +640,7 @@ impl<Model: BackendModel + Send + 'static> BackendImpl<Model> {
                 ModelManagementCommand::GetCurrentDownloads(tx) => {
                     let pending_downloads = {
                         let conn = self.sql_conn.lock().unwrap();
-                        crate::controllers::download_files::get_all_pending_downloads(&conn)
+                        crate::controllers::download_files::get_pending_downloads(&conn)
                             .map_err(|e| anyhow::anyhow!("get pending download file error: {e}"))
                     };
                     let _ = tx.send(pending_downloads);
