@@ -178,13 +178,9 @@ impl DownloadedFile {
         conn: &rusqlite::Connection,
         ids: &[S],
     ) -> rusqlite::Result<HashMap<Arc<String>, Self>> {
-        let placeholders = std::iter::repeat("?")
-            .take(ids.len())
-            .collect::<Vec<_>>()
-            .join(",");
         let sql = format!(
             "SELECT * FROM download_files WHERE model_id IN ({}) AND downloaded = TRUE",
-            placeholders,
+            crate::utils::sqlite::placeholder_vars(ids.len()),
         );
 
         let files = conn
