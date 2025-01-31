@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use chrono::{DateTime, Utc};
+use rusqlite::fallible_iterator::FallibleIterator;
 use rusqlite::Row;
 
 pub fn create_table_download_files(conn: &rusqlite::Connection) -> rusqlite::Result<()> {
@@ -149,30 +150,27 @@ impl DownloadedFile {
     pub fn get_finished(
         conn: &rusqlite::Connection,
     ) -> rusqlite::Result<HashMap<Arc<String>, Self>> {
-        let mut stmt = conn.prepare("SELECT * FROM download_files WHERE downloaded = TRUE")?;
-        let mut rows = stmt.query([])?;
-        let mut files = HashMap::new();
-
-        while let Some(row) = rows.next()? {
-            let file = Self::from_row(row)?;
-            files.insert(file.id.clone(), file);
-        }
-
-        Ok(files)
+        Self::get_by_downloaded(conn, false)
     }
 
     pub fn get_pending(
         conn: &rusqlite::Connection,
     ) -> rusqlite::Result<HashMap<Arc<String>, Self>> {
-        let mut stmt = conn.prepare("SELECT * FROM download_files WHERE downloaded = FALSE")?;
-        let mut rows = stmt.query([])?;
-        let mut files = HashMap::new();
+        Self::get_by_downloaded(conn, false)
+    }
 
-        while let Some(row) = rows.next()? {
-            let file = Self::from_row(row)?;
-            files.insert(file.id.clone(), file);
-        }
-
+    fn get_by_downloaded(
+        conn: &rusqlite::Connection,
+        downloaded: bool,
+    ) -> rusqlite::Result<HashMap<Arc<String>, Self>> {
+        let files = conn
+            .prepare("SELECT * FROM download_files WHERE downloaded = ?1")?
+            .query(rusqlite::params![downloaded])?
+            .map(|row| {
+                let file = Self::from_row(row)?;
+                Ok((file.id.clone(), file))
+            })
+            .collect()?;
         Ok(files)
     }
 
@@ -186,19 +184,17 @@ impl DownloadedFile {
             .join(",");
         let sql = format!(
             "SELECT * FROM download_files WHERE model_id IN ({}) AND downloaded = TRUE",
-            placeholders
+            placeholders,
         );
 
-        let mut stmt = conn.prepare(&sql)?;
-        let mut rows = stmt.query(rusqlite::params_from_iter(ids))?;
-
-        let mut files = HashMap::new();
-
-        while let Some(row) = rows.next()? {
-            let file = Self::from_row(row)?;
-            files.insert(file.id.clone(), file);
-        }
-
+        let files = conn
+            .prepare(&sql)?
+            .query(rusqlite::params_from_iter(ids))?
+            .map(|row| {
+                let file = Self::from_row(row)?;
+                Ok((file.id.clone(), file))
+            })
+            .collect()?;
         Ok(files)
     }
 
