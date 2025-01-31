@@ -42,7 +42,11 @@ async fn download_file<P: AsRef<Path>>(
     let path: &Path = local_path.as_ref();
     std::fs::create_dir_all(path.parent().unwrap())?;
 
-    let mut file = File::options().write(true).create(true).open(&local_path)?;
+    let mut file = File::options()
+        .write(true)
+        .create(true)
+        .truncate(false)
+        .open(&local_path)?;
 
     let file_length = file.metadata()?.len();
 
