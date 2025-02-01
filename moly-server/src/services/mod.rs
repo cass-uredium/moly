@@ -201,7 +201,7 @@ impl<Model: BackendModel + Send + 'static> BackendImpl<Model> {
         let (download_tx, download_rx) = tokio::sync::mpsc::unbounded_channel();
 
         {
-            use crate::controllers::download::ModelFileDownloader;
+            use crate::controllers::downloads::ModelFileDownloader;
 
             let client = reqwest::Client::new();
             let downloader = ModelFileDownloader::new(

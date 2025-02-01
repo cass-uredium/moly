@@ -1,4 +1,5 @@
 mod download_files;
+mod downloads;
 mod model_cards;
 mod models;
 
@@ -7,6 +8,7 @@ use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
 
 pub use download_files::*;
+pub use downloads::*;
 pub use model_cards::*;
 pub use models::*;
 
