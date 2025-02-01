@@ -13,7 +13,7 @@ use moly_protocol::protocol::{
 use crate::controllers::model_cards::ModelCardManager;
 use crate::models;
 
-mod api_server;
+mod llama_api_server;
 
 #[derive(Clone, Debug)]
 enum ModelManagementCommand {
@@ -108,7 +108,7 @@ pub enum DownloadControlCommand {
     Stop(FileId),
 }
 
-pub type LlamaEdgeApiServerBackend = BackendImpl<api_server::LLamaEdgeApiServer>;
+pub type LlamaEdgeApiServerBackend = BackendImpl<llama_api_server::LLamaEdgeApiServer>;
 
 pub trait BackendModel: Sized {
     fn new_or_reload(
