@@ -279,7 +279,7 @@ impl ModelFileDownloader {
                             downloaded_path: Some(
                                 local_path
                                     .to_str()
-                                    .map(|s| s.to_string())
+                                    .map(ToString::to_string)
                                     .unwrap_or_default(),
                             ),
                             tags: file.tags,

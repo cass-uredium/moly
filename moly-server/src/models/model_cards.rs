@@ -60,7 +60,7 @@ impl ModelCard {
                         .join(&file.name);
                     file_path
                         .to_str()
-                        .map(|s| s.to_string())
+                        .map(ToString::to_string)
                         .unwrap_or_default()
                 });
 

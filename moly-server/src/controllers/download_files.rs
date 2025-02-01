@@ -38,7 +38,7 @@ pub fn get_downloaded_files(
             .join(&file.model_id)
             .join(&file.name);
 
-        let downloaded_path = downloaded_path.to_str().map(|s| s.to_string());
+        let downloaded_path = downloaded_path.to_str().map(ToString::to_string);
 
         let downloaded_file = moly_protocol::data::DownloadedFile {
             file: moly_protocol::data::File {
