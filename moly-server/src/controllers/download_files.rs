@@ -1,16 +1,11 @@
-pub mod download_files;
-pub mod model_cards;
-pub mod models;
-pub mod remote;
-
 use std::path::Path;
 
-pub use remote::*;
+use crate::models;
 
 pub fn get_all_download_file(
     conn: &rusqlite::Connection,
 ) -> rusqlite::Result<Vec<moly_protocol::data::DownloadedFile>> {
-    let files = download_files::DownloadedFile::get_finished(conn)?;
+    let files = models::DownloadedFile::get_finished(conn)?;
     let models = models::Model::get_all(conn)?;
 
     let mut downloaded_files = Vec::with_capacity(files.len());
@@ -71,7 +66,7 @@ pub fn get_all_download_file(
 pub fn get_all_pending_downloads(
     conn: &rusqlite::Connection,
 ) -> rusqlite::Result<Vec<moly_protocol::data::PendingDownload>> {
-    let files = download_files::DownloadedFile::get_pending(conn)?;
+    let files = models::DownloadedFile::get_pending(conn)?;
     let models = models::Model::get_all(conn)?;
 
     let mut result = Vec::with_capacity(files.len());
@@ -125,7 +120,6 @@ pub fn get_all_pending_downloads(
             model,
             progress,
             status: moly_protocol::data::PendingDownloadsStatus::Paused,
-            //status: item.status.into(),
         };
 
         result.push(pending_download);
@@ -134,7 +128,10 @@ pub fn get_all_pending_downloads(
     Ok(result)
 }
 
-pub fn remove_downloaded_file(models_dir: String, file_id: moly_protocol::data::FileId) -> anyhow::Result<()> {
+pub fn remove_downloaded_file(
+    models_dir: String,
+    file_id: moly_protocol::data::FileId,
+) -> anyhow::Result<()> {
     let (model_id, file) = file_id
         .split_once("#")
         .ok_or_else(|| anyhow::anyhow!("Illegal file_id"))?;

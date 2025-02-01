@@ -12,7 +12,7 @@ use moly_protocol::protocol::LoadModelOptions;
 use wasmedge_sdk::wasi::WasiModule;
 use wasmedge_sdk::{Module, Store, Vm};
 
-use crate::store::download_files::DownloadedFile;
+use crate::models::DownloadedFile;
 
 use super::BackendModel;
 
@@ -167,7 +167,7 @@ impl BackendModel for LLamaEdgeApiServer {
     fn new_or_reload(
         async_rt: &tokio::runtime::Runtime,
         old_model: Option<Self>,
-        file: crate::store::download_files::DownloadedFile,
+        file: DownloadedFile,
         options: moly_protocol::protocol::LoadModelOptions,
         tx: std::sync::mpsc::Sender<anyhow::Result<moly_protocol::protocol::LoadModelResponse>>,
         embedding: Option<(std::path::PathBuf, u64)>,

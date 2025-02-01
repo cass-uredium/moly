@@ -5,11 +5,11 @@ use std::sync::mpsc::Sender;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
-use moly_protocol::data::Model;
 use moly_protocol::protocol::FileDownloadResponse;
 use tokio::time::timeout;
 
-use crate::backend_impls::DownloadControlCommand;
+use crate::models;
+use crate::services::DownloadControlCommand;
 
 async fn get_file_content_length(client: &reqwest::Client, url: &str) -> reqwest::Result<u64> {
     let response = client.head(url).send().await?;
@@ -116,8 +116,8 @@ impl ModelFileDownloader {
 
     fn get_download_url(
         &self,
-        file: &super::download_files::DownloadedFile,
-        remote_file: &super::model_cards::RemoteFile,
+        file: &models::DownloadedFile,
+        remote_file: &models::RemoteFile,
     ) -> String {
         remote_file
             .download
@@ -137,8 +137,8 @@ impl ModelFileDownloader {
 
     async fn download(
         self,
-        file: super::download_files::DownloadedFile,
-        remote_file: super::model_cards::RemoteFile,
+        file: models::DownloadedFile,
+        remote_file: models::RemoteFile,
         tx: Sender<anyhow::Result<FileDownloadResponse>>,
     ) {
         let file_id = file.id.to_string();
@@ -173,9 +173,9 @@ impl ModelFileDownloader {
         downloader: Self,
         max_downloader: usize,
         mut download_rx: tokio::sync::mpsc::UnboundedReceiver<(
-            super::models::Model,
-            super::download_files::DownloadedFile,
-            super::model_cards::RemoteFile,
+            models::Model,
+            models::DownloadedFile,
+            models::RemoteFile,
             Sender<anyhow::Result<FileDownloadResponse>>,
         )>,
     ) {
@@ -220,8 +220,8 @@ impl ModelFileDownloader {
 
     async fn download_file_from_remote(
         &self,
-        mut file: super::download_files::DownloadedFile,
-        remote_file: super::model_cards::RemoteFile,
+        mut file: models::DownloadedFile,
+        remote_file: models::RemoteFile,
         report_fn: &mut (dyn FnMut(f64) -> anyhow::Result<()> + Send),
     ) -> anyhow::Result<Option<FileDownloadResponse>> {
         let url = self.get_download_url(&file, &remote_file);
@@ -281,7 +281,7 @@ impl ModelFileDownloader {
                             tags: file.tags,
                             featured: false,
                         },
-                        model: Model::default(),
+                        model: moly_protocol::data::Model::default(),
                         downloaded_at: file.downloaded_at,
                         compatibility_guess:
                             moly_protocol::data::CompatibilityGuess::PossiblySupported,
