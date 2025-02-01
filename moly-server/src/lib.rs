@@ -1,8 +1,10 @@
 mod backend_impls;
 mod store;
 
+use std::path::Path;
+use std::sync::mpsc;
+
 use moly_protocol::protocol::Command;
-use std::{path::Path, sync::mpsc};
 
 pub struct Backend {
     pub command_sender: mpsc::Sender<Command>,

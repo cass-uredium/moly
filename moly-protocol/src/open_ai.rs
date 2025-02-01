@@ -1,6 +1,8 @@
-use crate::data::*;
-use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+
+use serde::{Deserialize, Serialize};
+
+use crate::data::*;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Message {

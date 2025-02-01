@@ -1,8 +1,7 @@
 pub mod download_files;
+pub mod model_cards;
 pub mod models;
 pub mod remote;
-
-pub mod model_cards;
 
 use std::path::Path;
 
@@ -75,7 +74,6 @@ pub fn get_all_pending_downloads(
     conn: &rusqlite::Connection,
 ) -> rusqlite::Result<Vec<moly_protocol::data::PendingDownload>> {
     let files = download_files::DownloadedFile::get_pending(&conn)?;
-
     let models = models::Model::get_all(&conn)?;
 
     let mut result = Vec::with_capacity(files.len());

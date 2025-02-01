@@ -1,15 +1,16 @@
-use std::{collections::HashMap, net::SocketAddr, time::Duration};
+use std::collections::HashMap;
+use std::net::SocketAddr;
+use std::time::Duration;
 
 use anyhow::anyhow;
 use futures_util::StreamExt;
-use moly_protocol::{
-    open_ai::{
-        ChatResponse, ChatResponseChunkData, ChatResponseData, ChunkChoiceData, MessageData, Role,
-        StopReason,
-    },
-    protocol::LoadModelOptions,
+use moly_protocol::open_ai::{
+    ChatResponse, ChatResponseChunkData, ChatResponseData, ChunkChoiceData, MessageData, Role,
+    StopReason,
 };
-use wasmedge_sdk::{wasi::WasiModule, Module, Store, Vm};
+use moly_protocol::protocol::LoadModelOptions;
+use wasmedge_sdk::wasi::WasiModule;
+use wasmedge_sdk::{Module, Store, Vm};
 
 use crate::store::download_files::DownloadedFile;
 

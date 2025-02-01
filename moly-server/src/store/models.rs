@@ -1,4 +1,5 @@
-use std::{collections::HashMap, sync::Arc};
+use std::collections::HashMap;
+use std::sync::Arc;
 
 use chrono::{DateTime, Utc};
 use rusqlite::params;
@@ -114,7 +115,6 @@ impl Model {
 }
 
 #[test]
-
 fn test_sql() {
     let _ = std::fs::remove_file("test_models.db");
     let conn: rusqlite::Connection = rusqlite::Connection::open("test_models.db").unwrap();

@@ -1,3 +1,22 @@
+use std::collections::HashMap;
+use std::io::Read;
+use std::path::PathBuf;
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::mpsc::{Receiver, Sender};
+use std::sync::Arc;
+use std::thread::JoinHandle;
+
+use moly_protocol::open_ai::{
+    ChatRequestData, ChatResponse, ChatResponseChunkData, ChatResponseData, ChoiceData,
+    ChunkChoiceData, MessageData, Role, StopReason, UsageData,
+};
+use moly_protocol::protocol::{LoadModelOptions, LoadModelResponse, LoadedModelInfo};
+use wasmedge_sdk::error::{CoreError, CoreExecutionError};
+use wasmedge_sdk::wasi::WasiModule;
+use wasmedge_sdk::{CallingFrame, ImportObject, Instance, Module, Store, Vm, WasmValue};
+
+use crate::store::download_files::DownloadedFile;
+
 #[derive(Debug)]
 pub enum TokenError {
     EndOfSequence = 1,
@@ -20,33 +39,6 @@ impl Into<StopReason> for TokenError {
         }
     }
 }
-
-use std::{
-    collections::HashMap,
-    io::Read,
-    path::PathBuf,
-    sync::{
-        atomic::{AtomicBool, Ordering},
-        mpsc::{Receiver, Sender},
-        Arc,
-    },
-    thread::JoinHandle,
-};
-
-use moly_protocol::{
-    open_ai::{
-        ChatRequestData, ChatResponse, ChatResponseChunkData, ChatResponseData, ChoiceData,
-        ChunkChoiceData, MessageData, Role, StopReason, UsageData,
-    },
-    protocol::{LoadModelOptions, LoadModelResponse, LoadedModelInfo},
-};
-use wasmedge_sdk::{
-    error::{CoreError, CoreExecutionError},
-    wasi::WasiModule,
-    CallingFrame, ImportObject, Instance, Module, Store, Vm, WasmValue,
-};
-
-use crate::store::download_files::DownloadedFile;
 
 #[derive(Debug)]
 pub struct ChatBotUi {
