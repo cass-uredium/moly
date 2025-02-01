@@ -256,8 +256,9 @@ impl<Model: BackendModel + Send + 'static> BackendImpl<Model> {
 
                             let _ = tx.send(models);
                         }
-                        Err(e) => {
-                            let _ = tx.send(Err(anyhow::anyhow!("get featured models error: {e}")));
+                        Err(err) => {
+                            let _ =
+                                tx.send(Err(anyhow::anyhow!("get featured models error: {err}")));
                         }
                     }
                 }
@@ -274,8 +275,8 @@ impl<Model: BackendModel + Send + 'static> BackendImpl<Model> {
                                     Ok(card) => {
                                         models.push(card);
                                     }
-                                    Err(e) => {
-                                        log::error!("load model card {} error: {e}", index.id);
+                                    Err(err) => {
+                                        log::error!("load model card {} error: {err}", index.id);
                                     }
                                 }
                             }
@@ -285,8 +286,8 @@ impl<Model: BackendModel + Send + 'static> BackendImpl<Model> {
 
                             let _ = tx.send(models);
                         }
-                        Err(e) => {
-                            let _ = tx.send(Err(anyhow::anyhow!("search models error: {e}")));
+                        Err(err) => {
+                            let _ = tx.send(Err(anyhow::anyhow!("search models error: {err}")));
                         }
                     }
                 }
@@ -352,8 +353,8 @@ impl<Model: BackendModel + Send + 'static> BackendImpl<Model> {
                         Ok((model, file, remote_file)) => {
                             let _ = self.download_tx.send((model, file, remote_file, tx));
                         }
-                        Err(e) => {
-                            let _ = tx.send(Err(e));
+                        Err(err) => {
+                            let _ = tx.send(Err(err));
                         }
                     }
                 }
@@ -432,8 +433,8 @@ impl<Model: BackendModel + Send + 'static> BackendImpl<Model> {
                                 self.model_indexs.embedding_model(),
                             ));
                         }
-                        Err(e) => {
-                            let _ = tx.send(Err(anyhow::anyhow!("Load model error: {e}")));
+                        Err(err) => {
+                            let _ = tx.send(Err(anyhow::anyhow!("Load model error: {err}")));
                         }
                     }
                 }

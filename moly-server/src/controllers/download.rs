@@ -148,27 +148,27 @@ impl ModelFileDownloader {
         let file_id = file.id.to_string();
 
         let mut send_progress = |progress| {
-            let r = tx.send(Ok(FileDownloadResponse::Progress(
+            let res = tx.send(Ok(FileDownloadResponse::Progress(
                 file_id.clone(),
                 progress as f32,
             )));
-            log::debug!("send progress {file_id} {progress} {r:?}");
+            log::debug!("send progress {file_id} {progress} {res:?}");
             Ok(())
         };
 
-        let r = self
+        let res = self
             .download_file_from_remote(file, remote_file, &mut send_progress)
             .await;
 
-        match r {
+        match res {
             Ok(Some(response)) => {
                 let _ = tx.send(Ok(response));
             }
             Ok(None) => {
                 // TODO Implement file removal when download is stopped, nothing to do when it is paused
             }
-            Err(e) => {
-                let _ = tx.send(Err(e));
+            Err(err) => {
+                let _ = tx.send(Err(err));
             }
         }
     }
@@ -205,10 +205,10 @@ impl ModelFileDownloader {
                 Ok(())
             };
 
-            let r: anyhow::Result<()> = f.await;
+            let res: anyhow::Result<()> = f.await;
 
-            if let Err(e) = r {
-                let _ = tx.send(Err(e));
+            if let Err(err) = res {
+                let _ = tx.send(Err(err));
                 continue;
             }
 
@@ -248,19 +248,19 @@ impl ModelFileDownloader {
             }
         };
 
-        let r = tokio::select! {
-            r = download_file(
+        let res = tokio::select! {
+            res = download_file(
                 &self.client,
                 file.file_size,
                 &url,
                 &local_path,
                 self.step,
                 report_fn,
-            ) => r?,
-            r = listen_control_cmd => r,
+            ) => res?,
+            res = listen_control_cmd => res,
         };
 
-        match r {
+        match res {
             DownloadResult::Completed(_) => {
                 {
                     let conn = self.sql_conn.lock().unwrap();

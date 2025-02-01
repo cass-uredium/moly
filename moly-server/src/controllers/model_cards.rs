@@ -212,9 +212,9 @@ pub fn open_or_clone<P: AsRef<Path>>(url: &str, repo_path: P) -> Result<Reposito
         };
 
         for _ in 0..2 {
-            let r = builder.clone(url, repo_path.as_ref());
-            if r.is_ok() {
-                return r;
+            let res = builder.clone(url, repo_path.as_ref());
+            if res.is_ok() {
+                return res;
             }
         }
         builder.clone(url, repo_path.as_ref())
@@ -260,17 +260,17 @@ pub fn sync_model_cards_repo<P: AsRef<Path>>(app_data_dir: P) -> anyhow::Result<
     let repo_dirs = app_data_dir.as_ref().join(REPO_NAME);
 
     let repo = open_or_clone(&repo_url, &repo_dirs)?;
-    let mut r = Ok(());
+    let mut res = Ok(());
     for _ in 0..2 {
-        r = pull(&repo, "origin", "main");
-        if r.is_ok() {
+        res = pull(&repo, "origin", "main");
+        if res.is_ok() {
             break;
         }
     }
 
-    if let Err(e) = r {
-        log::error!("Failed to pull: {:?}", e);
-        log::error!("please remove the repo({:?}) and try again", &repo_dirs);
+    if let Err(err) = res {
+        log::error!("Failed to pull: {:?}", err);
+        log::error!("please remove the repo ({:?}) and try again", &repo_dirs);
     }
 
     let index_url = format!("{}/releases/download/index_release/index.json", repo_url);
@@ -295,7 +295,7 @@ pub fn sync_model_cards_repo<P: AsRef<Path>>(app_data_dir: P) -> anyhow::Result<
             let embedding_index: EmbeddingIndex = serde_json::from_str(&embedding_index)?;
             if !embedding_index.check_file_exist(app_data_dir.as_ref()) {
                 let app_data_dir_path = app_data_dir.as_ref().to_path_buf();
-                let r = std::thread::spawn(move || {
+                let res = std::thread::spawn(move || {
                     if let Ok(_) = embedding_index.download(&app_data_dir_path) {
                         log::debug!("Downloaded embedding model ok");
                         Some(embedding_index)
@@ -304,7 +304,7 @@ pub fn sync_model_cards_repo<P: AsRef<Path>>(app_data_dir: P) -> anyhow::Result<
                         None
                     }
                 });
-                EmbeddingState::Pending(r)
+                EmbeddingState::Pending(res)
             } else {
                 EmbeddingState::Finish(Some(embedding_index))
             }
@@ -392,11 +392,11 @@ impl ModelCardManager {
     }
 
     pub fn load_model_card(&mut self, index: &ModelIndex) -> anyhow::Result<ModelCard> {
-        let r = self
+        let model_card = self
             .caches
             .entry(index.id.clone())
             .or_insert(index.load_model_card(&self.app_data_dir)?);
-        Ok(r.clone())
+        Ok(model_card.clone())
     }
 
     pub fn get_index_by_id(&self, id: &str) -> Option<&ModelIndex> {
@@ -467,9 +467,9 @@ impl ModelCardManager {
 
         match res {
             Some(index) => {
-                let r = (index.file_path(&self.app_data_dir), index.ctx);
+                let ret = (index.file_path(&self.app_data_dir), index.ctx);
                 self.embedding_index = EmbeddingState::Finish(Some(index));
-                Some(r)
+                Some(ret)
             }
             None => None,
         }

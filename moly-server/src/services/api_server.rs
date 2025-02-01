@@ -255,14 +255,14 @@ impl BackendModel for LLamaEdgeApiServer {
 
         let mut test_server = false;
         for _i in 0..5 {
-            let r = reqwest::blocking::ClientBuilder::new()
+            let resp = reqwest::blocking::ClientBuilder::new()
                 .timeout(Duration::from_secs(3))
                 .no_proxy()
                 .build()
                 .unwrap()
                 .get(&url)
                 .send();
-            if let Ok(resp) = r {
+            if let Ok(resp) = resp {
                 if resp.status().is_success() {
                     test_server = true;
                     break;
@@ -379,8 +379,8 @@ impl BackendModel for LLamaEdgeApiServer {
                         let _ = tx.send(resp.map(ChatResponse::ChatFinalResponseData));
                     }
                 }
-                Err(e) => {
-                    let _ = tx.send(Err(e));
+                Err(err) => {
+                    let _ = tx.send(Err(err));
                     let _ = tx.send(Ok(ChatResponse::ChatResponseChunk(stop_chunk(
                         StopReason::Stop,
                     ))));
