@@ -8,9 +8,13 @@ use std::time::Duration;
 use moly_protocol::protocol::FileDownloadResponse;
 use tokio::time::timeout;
 
+use crate::legacy::DownloadControlCommand;
 use crate::models;
-use crate::models::DownloadResult;
-use crate::services::DownloadControlCommand;
+
+pub enum DownloadResult {
+    Completed(f64),
+    Stopped(f64),
+}
 
 #[derive(Debug, Clone)]
 pub struct ModelFileDownloader {
@@ -292,144 +296,4 @@ async fn download_file<P: AsRef<Path>>(
     } else {
         Ok(DownloadResult::Completed(100.0))
     }
-}
-
-pub fn get_downloaded_files(
-    conn: &rusqlite::Connection,
-) -> rusqlite::Result<Vec<moly_protocol::data::DownloadedFile>> {
-    let files = models::DownloadedFile::get_finished(conn)?;
-    let models = models::Model::get_all(conn)?;
-
-    let mut downloaded_files = Vec::with_capacity(files.len());
-
-    for (_id, file) in files {
-        let model = if let Some(model) = models.get(&file.model_id) {
-            moly_protocol::data::Model {
-                id: model.id.to_string(),
-                name: model.name.clone(),
-                summary: model.summary.clone(),
-                size: model.size.clone(),
-                requires: model.requires.clone(),
-                architecture: model.architecture.clone(),
-                released_at: model.released_at,
-                files: vec![],
-                author: moly_protocol::data::Author {
-                    name: model.author.name.clone(),
-                    url: model.author.url.clone(),
-                    description: model.author.description.clone(),
-                },
-                like_count: model.like_count,
-                download_count: model.download_count,
-                metrics: Default::default(),
-            }
-        } else {
-            moly_protocol::data::Model::default()
-        };
-
-        let downloaded_path = Path::new(&file.download_dir)
-            .join(&file.model_id)
-            .join(&file.name);
-
-        let downloaded_path = downloaded_path.to_str().map(ToString::to_string);
-
-        let downloaded_file = moly_protocol::data::DownloadedFile {
-            file: moly_protocol::data::File {
-                id: file.id.to_string(),
-                name: file.name,
-                size: file.size,
-                quantization: file.quantization,
-                downloaded: true,
-                downloaded_path,
-                tags: file.tags,
-                featured: false,
-            },
-            model,
-            downloaded_at: file.downloaded_at,
-            compatibility_guess: moly_protocol::data::CompatibilityGuess::PossiblySupported,
-            information: String::new(),
-        };
-
-        downloaded_files.push(downloaded_file);
-    }
-
-    Ok(downloaded_files)
-}
-
-pub fn get_pending_downloads(
-    conn: &rusqlite::Connection,
-) -> rusqlite::Result<Vec<moly_protocol::data::PendingDownload>> {
-    let files = models::DownloadedFile::get_pending(conn)?;
-    let models = models::Model::get_all(conn)?;
-
-    let mut result = Vec::with_capacity(files.len());
-
-    for (_file_id, file) in files {
-        let result_file = moly_protocol::data::File {
-            id: file.id.to_string(),
-            name: file.name.clone(),
-            size: file.size.clone(),
-            quantization: file.quantization.clone(),
-            downloaded: false,
-            downloaded_path: None,
-            tags: file.tags.clone(),
-            featured: file.featured,
-        };
-
-        let model = if let Some(model) = models.get(&file.model_id) {
-            moly_protocol::data::Model {
-                id: model.id.to_string(),
-                name: model.name.clone(),
-                summary: model.summary.clone(),
-                size: model.size.clone(),
-                requires: model.requires.clone(),
-                architecture: model.architecture.clone(),
-                released_at: model.released_at,
-                files: vec![],
-                author: moly_protocol::data::Author {
-                    name: model.author.name.clone(),
-                    url: model.author.url.clone(),
-                    description: model.author.description.clone(),
-                },
-                like_count: model.like_count,
-                download_count: model.download_count,
-                metrics: Default::default(),
-            }
-        } else {
-            moly_protocol::data::Model::default()
-        };
-
-        let file_path = Path::new(&file.download_dir)
-            .join(&file.model_id)
-            .join(&file.name);
-
-        let downloaded = std::fs::metadata(file_path)
-            .map(|file_meta| file_meta.len())
-            .unwrap_or_default();
-        let progress = (downloaded as f64 / file.file_size as f64) * 100.0;
-
-        let pending_download = moly_protocol::data::PendingDownload {
-            file: result_file,
-            model,
-            progress,
-            status: moly_protocol::data::PendingDownloadsStatus::Paused,
-        };
-
-        result.push(pending_download);
-    }
-
-    Ok(result)
-}
-
-pub fn remove_downloaded_file<D: AsRef<Path>>(
-    models_dir: D,
-    file_id: moly_protocol::data::FileId,
-) -> anyhow::Result<()> {
-    let (model_id, filename) = file_id
-        .split_once("#")
-        .ok_or_else(|| anyhow::anyhow!("Illegal file_id"))?;
-
-    let file = models_dir.as_ref().join(model_id).join(filename);
-
-    log::info!("Removing file {}", file.to_string_lossy());
-    Ok(std::fs::remove_file(file)?)
 }

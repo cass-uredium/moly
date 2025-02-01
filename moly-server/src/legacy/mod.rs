@@ -10,8 +10,8 @@ use moly_protocol::protocol::{
     LocalServerResponse,
 };
 
-use crate::controllers::model_cards::ModelCardManager;
 use crate::models;
+use crate::store::index::ModelCardManager;
 
 mod llama_api_server;
 
@@ -171,7 +171,7 @@ impl<Model: BackendModel + Send + 'static> BackendImpl<Model> {
             )
         });
 
-        let model_indexs = crate::controllers::model_cards::sync_model_cards_repo(&app_data_dir);
+        let model_indexs = crate::store::index::sync_model_cards_repo(&app_data_dir);
         let model_indexs = match model_indexs {
             Ok(model_indexs) => {
                 log::info!("sync model cards repo success");
@@ -201,7 +201,7 @@ impl<Model: BackendModel + Send + 'static> BackendImpl<Model> {
         let (download_tx, download_rx) = tokio::sync::mpsc::unbounded_channel();
 
         {
-            use crate::controllers::downloads::ModelFileDownloader;
+            use crate::store::download::ModelFileDownloader;
 
             let client = reqwest::Client::new();
             let downloader = ModelFileDownloader::new(
@@ -372,10 +372,7 @@ impl<Model: BackendModel + Send + 'static> BackendImpl<Model> {
                         let conn = self.db_conn.lock().unwrap();
                         let _ = models::DownloadedFile::remove(&file_id, &conn);
                     }
-                    let _ = crate::controllers::download_files::remove_downloaded_file(
-                        &self.models_dir,
-                        file_id,
-                    );
+                    let _ = crate::store::remove_downloaded_file(&self.models_dir, file_id);
 
                     let _ = tx.send(Ok(()));
                 }
@@ -386,17 +383,14 @@ impl<Model: BackendModel + Send + 'static> BackendImpl<Model> {
                         let _ = models::DownloadedFile::remove(&file_id, &conn);
                     }
 
-                    let _ = crate::controllers::download_files::remove_downloaded_file(
-                        &self.models_dir,
-                        file_id,
-                    );
+                    let _ = crate::store::remove_downloaded_file(&self.models_dir, file_id);
                     let _ = tx.send(Ok(()));
                 }
 
                 ModelManagementCommand::GetDownloadedFiles(tx) => {
                     let downloads = {
                         let conn = self.db_conn.lock().unwrap();
-                        crate::controllers::download_files::get_downloaded_files(&conn)
+                        crate::store::get_downloaded_files(&conn)
                             .map_err(|e| anyhow::anyhow!("get download file error: {e}"))
                     };
 
@@ -406,7 +400,7 @@ impl<Model: BackendModel + Send + 'static> BackendImpl<Model> {
                 ModelManagementCommand::GetCurrentDownloads(tx) => {
                     let pending_downloads = {
                         let conn = self.db_conn.lock().unwrap();
-                        crate::controllers::download_files::get_pending_downloads(&conn)
+                        crate::store::get_pending_downloads(&conn)
                             .map_err(|e| anyhow::anyhow!("get pending download file error: {e}"))
                     };
                     let _ = tx.send(pending_downloads);

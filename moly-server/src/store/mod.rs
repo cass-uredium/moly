@@ -1,3 +1,6 @@
+pub mod download;
+pub mod index;
+
 use std::path::Path;
 
 use crate::models;

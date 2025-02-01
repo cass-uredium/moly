@@ -1,6 +1,6 @@
-mod controllers;
+mod legacy;
 mod models;
-mod services;
+mod store;
 mod utils;
 
 use std::path::Path;
@@ -24,7 +24,7 @@ impl Backend {
     ) -> Backend {
         #[cfg(debug_assertions)]
         env_logger::init();
-        let command_sender = services::LlamaEdgeApiServerBackend::build_command_sender(
+        let command_sender = legacy::LlamaEdgeApiServerBackend::build_command_sender(
             app_data_dir,
             models_dir,
             max_download_threads,
