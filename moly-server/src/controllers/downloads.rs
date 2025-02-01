@@ -15,7 +15,7 @@ use crate::services::DownloadControlCommand;
 #[derive(Debug, Clone)]
 pub struct ModelFileDownloader {
     client: reqwest::Client,
-    sql_conn: Arc<Mutex<rusqlite::Connection>>,
+    db_conn: Arc<Mutex<rusqlite::Connection>>,
     control_tx: tokio::sync::broadcast::Sender<DownloadControlCommand>,
     country_code: String,
     step: f64,
@@ -26,14 +26,14 @@ impl ModelFileDownloader {
 
     pub fn new(
         client: reqwest::Client,
-        sql_conn: Arc<Mutex<rusqlite::Connection>>,
+        db_conn: Arc<Mutex<rusqlite::Connection>>,
         control_tx: tokio::sync::broadcast::Sender<DownloadControlCommand>,
         country_code: String,
         step: f64,
     ) -> Self {
         Self {
             client,
-            sql_conn,
+            db_conn,
             control_tx,
             country_code,
             step,
@@ -63,7 +63,7 @@ impl ModelFileDownloader {
 
                 {
                     file.file_size = content_length;
-                    let conn = downloader.sql_conn.lock().unwrap();
+                    let conn = downloader.db_conn.lock().unwrap();
                     // insert a pending download
                     file.insert_into_db(&conn).map_err(|e| anyhow::anyhow!(e))?;
                     model.save_to_db(&conn).map_err(|e| anyhow::anyhow!(e))?;
@@ -164,7 +164,7 @@ impl ModelFileDownloader {
         match res {
             DownloadResult::Completed(_) => {
                 {
-                    let conn = self.sql_conn.lock().unwrap();
+                    let conn = self.db_conn.lock().unwrap();
                     file.mark_downloads();
                     let _ = file.update_downloaded(&conn);
                 }

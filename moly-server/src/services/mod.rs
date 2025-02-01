@@ -130,7 +130,7 @@ pub trait BackendModel: Sized {
 }
 
 pub struct BackendImpl<Model: BackendModel> {
-    sql_conn: Arc<Mutex<rusqlite::Connection>>,
+    db_conn: Arc<Mutex<rusqlite::Connection>>,
     model_indexs: ModelCardManager,
     #[allow(unused)]
     app_data_dir: PathBuf,
@@ -183,13 +183,13 @@ impl<Model: BackendModel + Send + 'static> BackendImpl<Model> {
             }
         };
 
-        let sql_conn = rusqlite::Connection::open(app_data_dir.join("data.sqlite")).unwrap();
+        let db_conn = rusqlite::Connection::open(app_data_dir.join("data.sqlite")).unwrap();
 
         // TODO Reorganize these bunch of functions, needs a little more of thought
-        models::create_table_models(&sql_conn).unwrap();
-        models::create_table_download_files(&sql_conn).unwrap();
+        models::create_table_models(&db_conn).unwrap();
+        models::create_table_download_files(&db_conn).unwrap();
 
-        let sql_conn = Arc::new(Mutex::new(sql_conn));
+        let db_conn = Arc::new(Mutex::new(db_conn));
 
         let (tx, rx) = std::sync::mpsc::channel();
 
@@ -206,7 +206,7 @@ impl<Model: BackendModel + Send + 'static> BackendImpl<Model> {
             let client = reqwest::Client::new();
             let downloader = ModelFileDownloader::new(
                 client,
-                sql_conn.clone(),
+                db_conn.clone(),
                 control_tx.clone(),
                 model_indexs.country_code.clone(),
                 0.1,
@@ -219,7 +219,7 @@ impl<Model: BackendModel + Send + 'static> BackendImpl<Model> {
         }
 
         let mut backend = Self {
-            sql_conn,
+            db_conn,
             model_indexs,
             app_data_dir,
             models_dir: models_dir.as_ref().into(),
@@ -250,8 +250,8 @@ impl<Model: BackendModel + Send + 'static> BackendImpl<Model> {
                                 }
                             }
 
-                            let sql_conn = self.sql_conn.lock().unwrap();
-                            let models = models::ModelCard::to_model(&models, &sql_conn)
+                            let db_conn = self.db_conn.lock().unwrap();
+                            let models = models::ModelCard::to_model(&models, &db_conn)
                                 .map_err(|e| anyhow::anyhow!("get featured error: {e}"));
 
                             let _ = tx.send(models);
@@ -267,7 +267,7 @@ impl<Model: BackendModel + Send + 'static> BackendImpl<Model> {
                     match res {
                         Ok(indexs) => {
                             log::debug!("search models: {}", indexs.len());
-                            let sql_conn = self.sql_conn.lock().unwrap();
+                            let db_conn = self.db_conn.lock().unwrap();
 
                             let mut models = Vec::new();
                             for index in indexs {
@@ -281,7 +281,7 @@ impl<Model: BackendModel + Send + 'static> BackendImpl<Model> {
                                 }
                             }
 
-                            let models = models::ModelCard::to_model(&models, &sql_conn)
+                            let models = models::ModelCard::to_model(&models, &db_conn)
                                 .map_err(|e| anyhow::anyhow!("search models error: {e}"));
 
                             let _ = tx.send(models);
@@ -369,7 +369,7 @@ impl<Model: BackendModel + Send + 'static> BackendImpl<Model> {
                     let _ = self.control_tx.send(DownloadControlCommand::Stop(file_id_));
 
                     {
-                        let conn = self.sql_conn.lock().unwrap();
+                        let conn = self.db_conn.lock().unwrap();
                         let _ = models::DownloadedFile::remove(&file_id, &conn);
                     }
                     let _ = crate::controllers::download_files::remove_downloaded_file(
@@ -382,7 +382,7 @@ impl<Model: BackendModel + Send + 'static> BackendImpl<Model> {
 
                 ModelManagementCommand::DeleteFile(file_id, tx) => {
                     {
-                        let conn = self.sql_conn.lock().unwrap();
+                        let conn = self.db_conn.lock().unwrap();
                         let _ = models::DownloadedFile::remove(&file_id, &conn);
                     }
 
@@ -395,7 +395,7 @@ impl<Model: BackendModel + Send + 'static> BackendImpl<Model> {
 
                 ModelManagementCommand::GetDownloadedFiles(tx) => {
                     let downloads = {
-                        let conn = self.sql_conn.lock().unwrap();
+                        let conn = self.db_conn.lock().unwrap();
                         crate::controllers::download_files::get_downloaded_files(&conn)
                             .map_err(|e| anyhow::anyhow!("get download file error: {e}"))
                     };
@@ -405,7 +405,7 @@ impl<Model: BackendModel + Send + 'static> BackendImpl<Model> {
 
                 ModelManagementCommand::GetCurrentDownloads(tx) => {
                     let pending_downloads = {
-                        let conn = self.sql_conn.lock().unwrap();
+                        let conn = self.db_conn.lock().unwrap();
                         crate::controllers::download_files::get_pending_downloads(&conn)
                             .map_err(|e| anyhow::anyhow!("get pending download file error: {e}"))
                     };
@@ -416,7 +416,7 @@ impl<Model: BackendModel + Send + 'static> BackendImpl<Model> {
             },
             BuiltInCommand::Interaction(model_cmd) => match model_cmd {
                 ModelInteractionCommand::LoadModel(file_id, options, tx) => {
-                    let conn = self.sql_conn.lock().unwrap();
+                    let conn = self.db_conn.lock().unwrap();
                     let download_file = models::DownloadedFile::get_by_id(&conn, &file_id);
 
                     match download_file {

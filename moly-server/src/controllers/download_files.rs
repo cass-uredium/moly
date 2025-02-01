@@ -3,10 +3,10 @@ use std::path::Path;
 use crate::models;
 
 pub fn get_downloaded_files(
-    conn: &rusqlite::Connection,
+    db_conn: &rusqlite::Connection,
 ) -> rusqlite::Result<Vec<moly_protocol::data::DownloadedFile>> {
-    let files = models::DownloadedFile::get_finished(conn)?;
-    let models = models::Model::get_all(conn)?;
+    let files = models::DownloadedFile::get_finished(db_conn)?;
+    let models = models::Model::get_all(db_conn)?;
 
     let mut downloaded_files = Vec::with_capacity(files.len());
 
@@ -64,10 +64,10 @@ pub fn get_downloaded_files(
 }
 
 pub fn get_pending_downloads(
-    conn: &rusqlite::Connection,
+    db_conn: &rusqlite::Connection,
 ) -> rusqlite::Result<Vec<moly_protocol::data::PendingDownload>> {
-    let files = models::DownloadedFile::get_pending(conn)?;
-    let models = models::Model::get_all(conn)?;
+    let files = models::DownloadedFile::get_pending(db_conn)?;
+    let models = models::Model::get_all(db_conn)?;
 
     let mut result = Vec::with_capacity(files.len());
 
