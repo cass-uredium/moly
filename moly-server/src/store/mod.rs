@@ -5,8 +5,6 @@ pub mod remote;
 
 use std::path::Path;
 
-use moly_protocol::data::FileID;
-
 pub use remote::*;
 
 pub fn get_all_download_file(
@@ -136,7 +134,7 @@ pub fn get_all_pending_downloads(
     Ok(result)
 }
 
-pub fn remove_downloaded_file(models_dir: String, file_id: FileID) -> anyhow::Result<()> {
+pub fn remove_downloaded_file(models_dir: String, file_id: moly_protocol::data::FileId) -> anyhow::Result<()> {
     let (model_id, file) = file_id
         .split_once("#")
         .ok_or_else(|| anyhow::anyhow!("Illegal file_id"))?;

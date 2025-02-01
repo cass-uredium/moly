@@ -7,7 +7,7 @@ use std::thread;
 
 #[derive(Debug)]
 pub struct DownloadFileAction {
-    pub file_id: FileID,
+    pub file_id: FileId,
     kind: DownloadFileActionKind,
 }
 

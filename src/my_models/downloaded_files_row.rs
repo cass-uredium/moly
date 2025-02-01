@@ -3,7 +3,7 @@ use crate::shared::actions::ChatAction;
 use crate::shared::modal::ModalWidgetExt;
 use crate::shared::utils::format_model_size;
 use makepad_widgets::*;
-use moly_protocol::data::{DownloadedFile, FileID};
+use moly_protocol::data::{DownloadedFile, FileId};
 
 live_design! {
     import makepad_widgets::base::*;
@@ -191,7 +191,7 @@ pub struct DownloadedFilesRow {
     view: View,
 
     #[rust]
-    file_id: Option<FileID>,
+    file_id: Option<FileId>,
 }
 
 impl Widget for DownloadedFilesRow {
@@ -278,7 +278,7 @@ impl WidgetMatchEvent for DownloadedFilesRow {
 }
 
 impl DownloadedFilesRowRef {
-    pub fn set_file_id(&mut self, file_id: FileID) {
+    pub fn set_file_id(&mut self, file_id: FileId) {
         let Some(mut inner) = self.borrow_mut() else {
             return;
         };

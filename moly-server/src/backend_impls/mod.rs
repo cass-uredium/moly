@@ -3,7 +3,7 @@ use std::sync::mpsc::{Receiver, Sender};
 use std::sync::{Arc, Mutex};
 
 use chrono::Utc;
-use moly_protocol::data::{DownloadedFile, FileID, Model, PendingDownload};
+use moly_protocol::data::{DownloadedFile, FileId, Model, PendingDownload};
 use moly_protocol::open_ai::{ChatRequestData, ChatResponse};
 use moly_protocol::protocol::{
     Command, FileDownloadResponse, LoadModelOptions, LoadModelResponse, LocalServerConfig,
@@ -20,19 +20,19 @@ mod chat_ui;
 enum ModelManagementCommand {
     GetFeaturedModels(Sender<anyhow::Result<Vec<Model>>>),
     SearchModels(String, Sender<anyhow::Result<Vec<Model>>>),
-    DownloadFile(FileID, Sender<anyhow::Result<FileDownloadResponse>>),
-    PauseDownload(FileID, Sender<anyhow::Result<()>>),
-    CancelDownload(FileID, Sender<anyhow::Result<()>>),
+    DownloadFile(FileId, Sender<anyhow::Result<FileDownloadResponse>>),
+    PauseDownload(FileId, Sender<anyhow::Result<()>>),
+    CancelDownload(FileId, Sender<anyhow::Result<()>>),
     GetCurrentDownloads(Sender<anyhow::Result<Vec<PendingDownload>>>),
     GetDownloadedFiles(Sender<anyhow::Result<Vec<DownloadedFile>>>),
-    DeleteFile(FileID, Sender<anyhow::Result<()>>),
+    DeleteFile(FileId, Sender<anyhow::Result<()>>),
     ChangeModelsLocation(PathBuf),
 }
 
 #[derive(Clone, Debug)]
 enum ModelInteractionCommand {
     LoadModel(
-        FileID,
+        FileId,
         LoadModelOptions,
         Sender<anyhow::Result<LoadModelResponse>>,
     ),
@@ -339,7 +339,7 @@ fn test_get_download_file() {
 
 #[derive(Debug, Clone)]
 pub enum DownloadControlCommand {
-    Stop(FileID),
+    Stop(FileId),
 }
 
 pub type ChatModelBackend = BackendImpl<chat_ui::ChatBotModel>;
