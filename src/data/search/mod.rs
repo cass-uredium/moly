@@ -1,7 +1,7 @@
 mod faked_models;
 
 use makepad_widgets::{Action, Cx};
-use moly_backend::Backend;
+use moly_fake_backend::Backend;
 use moly_protocol::data::*;
 use moly_protocol::protocol::Command;
 use std::rc::Rc;

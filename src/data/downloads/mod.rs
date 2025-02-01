@@ -3,7 +3,7 @@ pub mod download;
 use anyhow::{Context, Result};
 use download::{Download, DownloadFileAction, DownloadState};
 use makepad_widgets::Action;
-use moly_backend::Backend;
+use moly_fake_backend::Backend;
 use moly_protocol::{
     data::{DownloadedFile, File, FileID, Model, PendingDownload, PendingDownloadsStatus},
     protocol::Command,

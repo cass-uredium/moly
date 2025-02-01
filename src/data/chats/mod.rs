@@ -5,7 +5,7 @@ use anyhow::{Context, Result};
 use chat::{Chat, ChatEntityAction, ChatID};
 use makepad_widgets::ActionTrait;
 use model_loader::ModelLoader;
-use moly_backend::Backend;
+use moly_fake_backend::Backend;
 use moly_protocol::data::*;
 use moly_protocol::protocol::Command;
 use std::fs;

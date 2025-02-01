@@ -8,7 +8,7 @@ use super::{chats::Chats, downloads::Downloads, search::Search};
 use anyhow::Result;
 use chrono::{DateTime, Utc};
 use makepad_widgets::{Action, ActionDefaultRef, DefaultNone};
-use moly_backend::Backend;
+use moly_fake_backend::Backend;
 use moly_protocol::data::{Author, DownloadedFile, File, FileID, Model, ModelID, PendingDownload};
 use std::rc::Rc;
 
@@ -62,12 +62,12 @@ impl Default for Store {
 impl Store {
     pub fn new() -> Self {
         let preferences = Preferences::load();
-        let app_data_dir = project_dirs().data_dir();
+        let _app_data_dir = project_dirs().data_dir();
 
         let backend = Rc::new(Backend::new(
-            app_data_dir,
-            preferences.downloaded_files_dir.clone(),
-            DEFAULT_MAX_DOWNLOAD_THREADS,
+            // app_data_dir,
+            // preferences.downloaded_files_dir.clone(),
+            // DEFAULT_MAX_DOWNLOAD_THREADS,
         ));
 
         let mut store = Self {
