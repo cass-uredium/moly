@@ -210,8 +210,8 @@ impl BackendModel for LLamaEdgeApiServer {
                 });
 
             let new_addr = listen_addr.unwrap_or_else(|| {
-                    let listener = std::net::TcpListener::bind(&addr).unwrap();
-                    listener.local_addr().unwrap()
+                let listener = std::net::TcpListener::bind(&addr).unwrap();
+                listener.local_addr().unwrap()
             });
 
             (Module::from_bytes(None, WASM).unwrap(), new_addr)
