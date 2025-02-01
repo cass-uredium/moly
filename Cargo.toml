@@ -2,6 +2,7 @@
 resolver = "2"
 
 members = [
+    "moly-client",
     "moly-runner",
     "moly-protocol",
     "moly-backend",

@@ -1844,6 +1844,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "moly-client"
+version = "0.1.0"
+dependencies = [
+ "moly-protocol",
+]
+
+[[package]]
 name = "moly-fake-backend"
 version = "0.1.0"
 dependencies = [
