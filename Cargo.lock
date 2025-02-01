@@ -1822,27 +1822,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "moly-backend"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "chrono",
- "crossbeam",
- "env_logger",
- "futures-util",
- "git2",
- "log",
- "moly-protocol",
- "reqwest",
- "rusqlite",
- "serde",
- "serde_json",
- "tokio",
- "uuid",
- "wasmedge-sdk",
-]
-
-[[package]]
 name = "moly-client"
 version = "0.1.0"
 dependencies = [
@@ -1873,6 +1852,27 @@ dependencies = [
  "directories",
  "powershell_script",
  "windows-sys 0.52.0",
+]
+
+[[package]]
+name = "moly-server"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "chrono",
+ "crossbeam",
+ "env_logger",
+ "futures-util",
+ "git2",
+ "log",
+ "moly-protocol",
+ "reqwest",
+ "rusqlite",
+ "serde",
+ "serde_json",
+ "tokio",
+ "uuid",
+ "wasmedge-sdk",
 ]
 
 [[package]]
