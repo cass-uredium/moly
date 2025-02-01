@@ -27,9 +27,9 @@ pub enum TokenError {
     Other,
 }
 
-impl Into<StopReason> for TokenError {
-    fn into(self) -> StopReason {
-        match self {
+impl From<TokenError> for StopReason {
+    fn from(val: TokenError) -> Self {
+        match val {
             TokenError::EndOfSequence => StopReason::Stop,
             TokenError::ContextFull => StopReason::Length,
             TokenError::PromptTooLong => StopReason::Length,
@@ -80,7 +80,7 @@ impl ChatBotUi {
             if !req.stream.unwrap_or_default() {
                 self.chat_completion_message = Some(Vec::with_capacity(
                     (req.max_tokens.unwrap_or(512) * 8) as usize,
-                ))
+                ));
             }
             *self.current_req.get_mut() = serde_json::to_vec(&req).unwrap();
             self.current_req.set_position(0);
@@ -323,7 +323,7 @@ fn create_wasi(
     };
 
     // Set n_batch to a fixed value of 128.
-    let batch_size = Some(format!("128"));
+    let batch_size = Some("128");
 
     let mut prompt_template = load_model.prompt_template.clone();
     if prompt_template.is_none() && !file.prompt_template.is_empty() {
@@ -355,7 +355,7 @@ fn create_wasi(
         ($flag:expr, $value:expr) => {
             if let Some(ref value) = $value {
                 args.push($flag);
-                args.push(value.as_str());
+                args.push(&*value);
             }
         };
     }
@@ -384,6 +384,7 @@ pub fn run_wasm_by_downloaded_file(
     let mut instances: HashMap<String, &mut (dyn SyncInst)> = HashMap::new();
 
     let mut wasi = create_wasi(&file, &load_model, embedding).unwrap();
+    let mut wasi_nn = wasmedge_sdk::plugin::PluginManager::load_plugin_wasi_nn().unwrap();
     let mut chatui = module(ChatBotUi::new(
         request_rx,
         model_running_controller,
@@ -394,7 +395,6 @@ pub fn run_wasm_by_downloaded_file(
     .unwrap();
 
     instances.insert(wasi.name().to_string(), wasi.as_mut());
-    let mut wasi_nn = wasmedge_sdk::plugin::PluginManager::load_plugin_wasi_nn().unwrap();
     instances.insert(wasi_nn.name().unwrap(), &mut wasi_nn);
     instances.insert(chatui.name().unwrap(), &mut chatui);
 
@@ -441,7 +441,7 @@ impl super::BackendModel for ChatBotModel {
             let _ = tx.send(Ok(LoadModelResponse::Completed(LoadedModelInfo {
                 file_id: file.id.to_string(),
                 model_id: file.model_id,
-                information: "".to_string(),
+                information: String::new(),
                 listen_port: 0,
             })));
             return old_model.unwrap();

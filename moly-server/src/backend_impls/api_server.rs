@@ -40,16 +40,16 @@ fn create_wasi(
     embedding: Option<(std::path::PathBuf, u64)>,
 ) -> wasmedge_sdk::WasmEdgeResult<WasiModule> {
     // use model metadata context size
-    let ctx_size_str = if let Some(n_ctx) = load_model.n_ctx {
-        format!("{}", n_ctx)
+    let ctx_size = if let Some(n_ctx) = load_model.n_ctx {
+        n_ctx.to_string()
     } else {
-        format!("{}", file.context_size.min(8 * 1024))
+        file.context_size.min(8 * 1024).to_string()
     };
 
     let ctx_size = if let Some((_, embedding_ctx)) = embedding {
-        Some(format!("{},{}", ctx_size_str, embedding_ctx))
+        Some(format!("{ctx_size},{embedding_ctx}"))
     } else {
-        Some(ctx_size_str)
+        Some(ctx_size)
     };
 
     let n_gpu_layers = match load_model.gpu_layers {
@@ -58,16 +58,12 @@ fn create_wasi(
     };
 
     // Set n_batch to a fixed value of 128.
-    let batch_size = if let Some(n_batch) = load_model.n_batch {
-        n_batch
-    } else {
-        128
-    };
+    let batch_size = load_model.n_batch.unwrap_or(128);
 
     let batch_size = if let Some((_, embedding_ctx)) = embedding {
         Some(format!("{},{}", batch_size, embedding_ctx))
     } else {
-        Some(format!("{}", batch_size))
+        Some(batch_size.to_string())
     };
 
     let mut prompt_template = load_model.prompt_template.clone();
@@ -88,7 +84,7 @@ fn create_wasi(
         Some(file.reverse_prompt.clone())
     };
 
-    let listen_addr = Some(format!("{listen_addr}"));
+    let listen_addr = Some(listen_addr.to_string());
 
     let mut module_alias = "moly-chat".to_string();
     if embedding.is_some() {
@@ -107,7 +103,7 @@ fn create_wasi(
         ($flag:expr, $value:expr) => {
             if let Some(ref value) = $value {
                 args.push($flag);
-                args.push(value.as_str());
+                args.push(&*value);
             }
         };
     }
@@ -208,19 +204,15 @@ impl BackendModel for LLamaEdgeApiServer {
             let listen_addr = load_model_options
                 .override_server_address
                 .clone()
-                .map(|addr| match std::net::TcpListener::bind(&addr) {
+                .and_then(|addr| match std::net::TcpListener::bind(&addr) {
                     Ok(listener) => Some(listener.local_addr().unwrap()),
                     Err(_) => None,
-                })
-                .flatten();
+                });
 
-            let new_addr = match listen_addr {
-                Some(addr) => addr,
-                None => {
+            let new_addr = listen_addr.unwrap_or_else(|| {
                     let listener = std::net::TcpListener::bind(&addr).unwrap();
                     listener.local_addr().unwrap()
-                }
-            };
+            });
 
             (Module::from_bytes(None, WASM).unwrap(), new_addr)
         };
@@ -230,7 +222,7 @@ impl BackendModel for LLamaEdgeApiServer {
                 moly_protocol::protocol::LoadedModelInfo {
                     file_id: file.id.to_string(),
                     model_id: file.model_id,
-                    information: "".to_string(),
+                    information: String::new(),
                     listen_port: listen_addr.port(),
                 },
             )));
@@ -276,14 +268,14 @@ impl BackendModel for LLamaEdgeApiServer {
                     break;
                 }
             }
-            let _ = std::thread::sleep(std::time::Duration::from_secs(1));
+            std::thread::sleep(std::time::Duration::from_secs(1));
         }
         if test_server {
             let _ = tx.send(Ok(moly_protocol::protocol::LoadModelResponse::Completed(
                 moly_protocol::protocol::LoadedModelInfo {
                     file_id: file_.id.to_string(),
                     model_id: file_.model_id,
-                    information: "".to_string(),
+                    information: String::new(),
                     listen_port,
                 },
             )));
@@ -405,7 +397,7 @@ impl BackendModel for LLamaEdgeApiServer {
 
     fn stop(self, _async_rt: &tokio::runtime::Runtime) {
         let url = format!("http://localhost:{}/admin/exit", self.listen_addr.port());
-        let res = reqwest::blocking::ClientBuilder::new()
+        let _res = reqwest::blocking::ClientBuilder::new()
             .timeout(Duration::from_secs(2))
             .no_proxy()
             .build()

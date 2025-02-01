@@ -421,8 +421,8 @@ impl<Model: BackendModel + Send + 'static> BackendImpl<Model> {
         let sql_conn = rusqlite::Connection::open(app_data_dir.join("data.sqlite")).unwrap();
 
         // TODO Reorganize these bunch of functions, needs a little more of thought
-        let _ = store::models::create_table_models(&sql_conn).unwrap();
-        let _ = store::download_files::create_table_download_files(&sql_conn).unwrap();
+        store::models::create_table_models(&sql_conn).unwrap();
+        store::download_files::create_table_download_files(&sql_conn).unwrap();
 
         let sql_conn = Arc::new(Mutex::new(sql_conn));
 
@@ -527,7 +527,7 @@ impl<Model: BackendModel + Send + 'static> BackendImpl<Model> {
                     //search model from remote
                     let mut search_model_from_remote = || -> anyhow::Result<(crate::store::models::Model, crate::store::download_files::DownloadedFile, crate::store::model_cards::RemoteFile)> {
                         let (model_id, file) = file_id
-                            .split_once("#")
+                            .split_once('#')
                             .ok_or_else(|| anyhow::anyhow!("Illegal file_id"))?;
 
                         let index = self.model_indexs.get_index_by_id(model_id).ok_or(anyhow::anyhow!("No model found"))?.clone();
@@ -657,15 +657,14 @@ impl<Model: BackendModel + Send + 'static> BackendImpl<Model> {
                             nn_preload_file(&file, self.model_indexs.embedding_model());
                             let old_model = self.model.take();
 
-                            let model = Model::new_or_reload(
+                            self.model = Some(Model::new_or_reload(
                                 &self.async_rt,
                                 old_model,
                                 file,
                                 options,
                                 tx,
                                 self.model_indexs.embedding_model(),
-                            );
-                            self.model = Some(model);
+                            ));
                         }
                         Err(e) => {
                             let _ = tx.send(Err(anyhow::anyhow!("Load model error: {e}")));
@@ -686,9 +685,9 @@ impl<Model: BackendModel + Send + 'static> BackendImpl<Model> {
                     }
                 }
                 ModelInteractionCommand::StopChatCompletion(tx) => {
-                    self.model
-                        .as_ref()
-                        .map(|model| model.stop_chat(&self.async_rt));
+                    if let Some(ref model) = self.model {
+                        model.stop_chat(&self.async_rt);
+                    }
                     let _ = tx.send(Ok(()));
                 }
                 ModelInteractionCommand::StartLocalServer(_, _) => todo!(),
@@ -702,12 +701,8 @@ impl<Model: BackendModel + Send + 'static> BackendImpl<Model> {
     }
 
     fn run_loop(&mut self) {
-        loop {
-            if let Ok(cmd) = self.rx.recv() {
-                self.handle_command(cmd.into());
-            } else {
-                break;
-            }
+        while let Ok(cmd) = self.rx.recv() {
+            self.handle_command(cmd.into());
         }
 
         log::debug!("BackendImpl stop");

@@ -12,8 +12,8 @@ pub use remote::*;
 pub fn get_all_download_file(
     conn: &rusqlite::Connection,
 ) -> rusqlite::Result<Vec<moly_protocol::data::DownloadedFile>> {
-    let files = download_files::DownloadedFile::get_finished(&conn)?;
-    let models = models::Model::get_all(&conn)?;
+    let files = download_files::DownloadedFile::get_finished(conn)?;
+    let models = models::Model::get_all(conn)?;
 
     let mut downloaded_files = Vec::with_capacity(files.len());
 
@@ -26,7 +26,7 @@ pub fn get_all_download_file(
                 size: model.size.clone(),
                 requires: model.requires.clone(),
                 architecture: model.architecture.clone(),
-                released_at: model.released_at.clone(),
+                released_at: model.released_at,
                 files: vec![],
                 author: moly_protocol::data::Author {
                     name: model.author.name.clone(),
@@ -73,8 +73,8 @@ pub fn get_all_download_file(
 pub fn get_all_pending_downloads(
     conn: &rusqlite::Connection,
 ) -> rusqlite::Result<Vec<moly_protocol::data::PendingDownload>> {
-    let files = download_files::DownloadedFile::get_pending(&conn)?;
-    let models = models::Model::get_all(&conn)?;
+    let files = download_files::DownloadedFile::get_pending(conn)?;
+    let models = models::Model::get_all(conn)?;
 
     let mut result = Vec::with_capacity(files.len());
 
@@ -98,7 +98,7 @@ pub fn get_all_pending_downloads(
                 size: model.size.clone(),
                 requires: model.requires.clone(),
                 architecture: model.architecture.clone(),
-                released_at: model.released_at.clone(),
+                released_at: model.released_at,
                 files: vec![],
                 author: moly_protocol::data::Author {
                     name: model.author.name.clone(),
@@ -117,11 +117,9 @@ pub fn get_all_pending_downloads(
             .join(&file.model_id)
             .join(&file.name);
 
-        let downloaded = if let Ok(file_meta) = std::fs::metadata(file_path) {
-            file_meta.len()
-        } else {
-            0
-        };
+        let downloaded = std::fs::metadata(file_path)
+            .map(|file_meta| file_meta.len())
+            .unwrap_or_default();
         let progress = (downloaded as f64 / file.file_size as f64) * 100.0;
 
         let pending_download = moly_protocol::data::PendingDownload {

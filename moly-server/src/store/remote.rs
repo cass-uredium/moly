@@ -62,27 +62,17 @@ async fn download_file<P: AsRef<Path>>(
 
         let mut stream = resp.bytes_stream();
 
-        loop {
-            match timeout(Duration::from_secs(10), stream.next()).await? {
-                Some(chunk) => {
-                    let chunk = chunk.map_err(|e| anyhow::anyhow!(e))?;
-                    let len = chunk.len();
-                    file.write_all(&chunk)?;
-                    downloaded += len as u64;
+        // Download until complete
+        while let Some(chunk) = timeout(Duration::from_secs(10), stream.next()).await? {
+            let chunk = chunk.map_err(|e| anyhow::anyhow!(e))?;
+            let len = chunk.len();
+            file.write_all(&chunk)?;
+            downloaded += len as u64;
 
-                    let progress = (downloaded as f64 / content_length as f64) * 100.0;
-                    if progress > last_progress + step {
-                        last_progress = progress;
-                        match report_fn(progress) {
-                            Ok(_) => {}
-                            Err(_) => {}
-                        }
-                    }
-                }
-                None => {
-                    // Download is complete
-                    break;
-                }
+            let progress = (downloaded as f64 / content_length as f64) * 100.0;
+            if progress > last_progress + step {
+                last_progress = progress;
+                let _ = report_fn(progress);
             }
         }
 
@@ -106,7 +96,7 @@ pub struct ModelFileDownloader {
 }
 
 impl ModelFileDownloader {
-    const DEFAULT_COUNTRY_CODE: &'static str = "default";
+    const DEFAULT_COUNTRY_CODE: &str = "default";
 
     pub fn new(
         client: reqwest::Client,
@@ -278,9 +268,9 @@ impl ModelFileDownloader {
                     moly_protocol::data::DownloadedFile {
                         file: moly_protocol::data::File {
                             id: file.id.as_ref().clone(),
-                            name: file.name.clone(),
-                            size: file.size.clone(),
-                            quantization: file.quantization.clone(),
+                            name: file.name,
+                            size: file.size,
+                            quantization: file.quantization,
                             downloaded: true,
                             downloaded_path: Some(
                                 local_path

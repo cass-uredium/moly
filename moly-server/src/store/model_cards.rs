@@ -71,7 +71,7 @@ fn do_fetch<'a>(
     }
 
     let fetch_head = repo.find_reference("FETCH_HEAD")?;
-    Ok(repo.reference_to_annotated_commit(&fetch_head)?)
+    repo.reference_to_annotated_commit(&fetch_head)
 }
 
 fn fast_forward(
@@ -173,7 +173,7 @@ fn do_merge<'a>(
     } else if analysis.0.is_normal() {
         // do a normal merge
         let head_commit = repo.reference_to_annotated_commit(&repo.head()?)?;
-        normal_merge(&repo, &head_commit, &fetch_commit)?;
+        normal_merge(repo, &head_commit, &fetch_commit)?;
     } else {
         log::debug!("Nothing to do...");
     }
@@ -182,8 +182,8 @@ fn do_merge<'a>(
 
 pub fn pull(repo: &Repository, remote_name: &str, remote_branch: &str) -> Result<(), git2::Error> {
     let mut remote = repo.find_remote(remote_name)?;
-    let fetch_commit = do_fetch(&repo, &[remote_branch], &mut remote)?;
-    do_merge(&repo, &remote_branch, fetch_commit)
+    let fetch_commit = do_fetch(repo, &[remote_branch], &mut remote)?;
+    do_merge(repo, remote_branch, fetch_commit)
 }
 
 pub fn open_or_clone<P: AsRef<Path>>(url: &str, repo_path: P) -> Result<Repository, git2::Error> {
@@ -235,7 +235,7 @@ fn get_model_cards_repo() -> (String, String) {
             match reqwest::blocking::get("http://ip-api.com/json")
                 .and_then(|r| r.json::<IpResult>())
             {
-                Ok(ip_result) if ip_result.country_code.to_ascii_uppercase() == "CN" => (
+                Ok(ip_result) if ip_result.country_code.eq_ignore_ascii_case("CN") => (
                     "https://gitcode.com/xun_csh/model-cards.git".to_string(),
                     "CN".to_string(),
                 ),
@@ -252,7 +252,7 @@ fn get_model_cards_repo() -> (String, String) {
     }
 }
 
-pub static REPO_NAME: &'static str = "model-cards";
+pub static REPO_NAME: &str = "model-cards";
 
 pub fn sync_model_cards_repo<P: AsRef<Path>>(app_data_dir: P) -> anyhow::Result<ModelCardManager> {
     let (repo_url, country_code) = get_model_cards_repo();
@@ -355,7 +355,7 @@ impl ModelIndex {
         let model_card_path = app_data_dir
             .join(REPO_NAME)
             .join(org_name)
-            .join(format!("{}.json", sub_name));
+            .join(format!("{sub_name}.json"));
         let model_card = std::fs::read_to_string(model_card_path)?;
         let mut model_card: ModelCard = serde_json::from_str(&model_card)?;
         model_card.like_count = self.like_count;
@@ -515,7 +515,7 @@ pub enum EmbeddingState {
 }
 
 impl ModelCardManager {
-    const DEFAULT_COUNTRY_CODE: &'static str = "default";
+    const DEFAULT_COUNTRY_CODE: &str = "default";
 
     pub fn empty(app_data_dir: PathBuf) -> Self {
         Self {
@@ -585,9 +585,7 @@ impl ModelCardManager {
     pub fn embedding_model(&mut self) -> Option<(PathBuf, u64)> {
         match &self.embedding_index {
             EmbeddingState::Pending(res) => {
-                if res.is_finished() {
-                    ()
-                } else {
+                if !res.is_finished() {
                     return None;
                 }
             }
