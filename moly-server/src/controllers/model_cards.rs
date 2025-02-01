@@ -227,24 +227,29 @@ pub struct IpResult {
     country_code: String,
 }
 
+pub const REPO_URL_ENV: &str = "MODEL_CARDS_REPO";
+
+pub const REPO_URL_DEFAULT: &str = "https://github.com/moxin-org/model-cards.git";
+pub const REPO_URL_DEFAULT_CN: &str = "https://gitcode.com/xun_csh/model-cards.git";
+
+pub const IP_API_ENDPOINT: &str = "http://ip-api.com/json";
+
 fn get_model_cards_repo() -> (String, String) {
-    let repo_url = std::env::var("MODEL_CARDS_REPO");
+    let repo_url = std::env::var(REPO_URL_ENV);
     match repo_url {
         Ok(url) => (url, ModelCardManager::DEFAULT_COUNTRY_CODE.to_string()),
         Err(_) => {
-            match reqwest::blocking::get("http://ip-api.com/json")
-                .and_then(|r| r.json::<IpResult>())
-            {
+            match reqwest::blocking::get(IP_API_ENDPOINT).and_then(|r| r.json::<IpResult>()) {
                 Ok(ip_result) if ip_result.country_code.eq_ignore_ascii_case("CN") => (
-                    "https://gitcode.com/xun_csh/model-cards.git".to_string(),
-                    "CN".to_string(),
+                    REPO_URL_DEFAULT_CN.to_string(),
+                    ip_result.country_code.to_ascii_uppercase(),
                 ),
                 Ok(ip_result) => (
-                    "https://github.com/moxin-org/model-cards.git".to_string(),
+                    REPO_URL_DEFAULT.to_string(),
                     ip_result.country_code.to_ascii_uppercase(),
                 ),
                 _ => (
-                    "https://github.com/moxin-org/model-cards.git".to_string(),
+                    REPO_URL_DEFAULT.to_string(),
                     ModelCardManager::DEFAULT_COUNTRY_CODE.to_string(),
                 ),
             }
@@ -252,7 +257,7 @@ fn get_model_cards_repo() -> (String, String) {
     }
 }
 
-pub static REPO_NAME: &str = "model-cards";
+pub const REPO_NAME: &str = "model-cards";
 
 pub fn sync_model_cards_repo<P: AsRef<Path>>(app_data_dir: P) -> anyhow::Result<ModelCardManager> {
     let (repo_url, country_code) = get_model_cards_repo();
