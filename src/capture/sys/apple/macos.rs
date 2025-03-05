@@ -3,9 +3,7 @@ use objc2::{define_class, msg_send, AllocAnyThread, ClassType, DefinedClass, Mai
 use objc2_app_kit::{NSApplication, NSPasteboard, NSPasteboardTypeString};
 use objc2_foundation::{NSObject, NSObjectProtocol, NSString};
 
-use crate::capture::{CaptureData, CaptureHandler, CaptureKind};
-
-pub type HandlerInner = Box<dyn CaptureHandler>;
+use crate::capture::{CaptureEvent, CaptureHandler, CaptureSource};
 
 pub fn register_handler<T>(handler: T)
 where
@@ -23,7 +21,7 @@ where
 }
 
 struct ServiceProviderIvars {
-    handler: HandlerInner,
+    handler: Box<dyn CaptureHandler>,
 }
 
 define_class!(
@@ -48,15 +46,17 @@ define_class!(
             }
 
             if let Some(contents) = contents {
-                let data = CaptureData::new(contents.to_string(), CaptureKind::Text);
-                self.ivars().handler.capture(data);
+                self.ivars().handler.capture(CaptureEvent {
+                    contents: contents.to_string(),
+                    source: CaptureSource::System,
+                });
             }
         }
     }
 );
 
 impl ServiceProvider {
-    fn new(handler: HandlerInner) -> Retained<Self> {
+    fn new(handler: Box<dyn CaptureHandler>) -> Retained<Self> {
         let this = Self::alloc().set_ivars(ServiceProviderIvars { handler });
         unsafe { msg_send![super(this), init] }
     }
