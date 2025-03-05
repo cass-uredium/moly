@@ -3,14 +3,14 @@ use objc2::{define_class, msg_send, AllocAnyThread, ClassType, DefinedClass, Mai
 use objc2_app_kit::{NSApplication, NSPasteboard, NSPasteboardTypeString};
 use objc2_foundation::{NSObject, NSObjectProtocol, NSString};
 
-use crate::capture::{CaptureEvent, CaptureHandler, CaptureSource};
+use crate::capture::{CaptureEvent, CaptureHandler, CaptureSource, InitError};
 
-pub fn register_handler<T>(handler: T)
+pub fn register_handler<T>(handler: T) -> Result<(), InitError>
 where
     T: CaptureHandler,
 {
     let mtm: MainThreadMarker =
-        MainThreadMarker::new().expect("Application must be initialized on the main thread");
+        MainThreadMarker::new().expect("Handler must be registered on the main thread");
 
     let application = NSApplication::sharedApplication(mtm);
 
@@ -18,6 +18,8 @@ where
     unsafe {
         application.setServicesProvider(Some(service_provider.as_super()));
     }
+
+    Ok(())
 }
 
 struct ServiceProviderIvars {
