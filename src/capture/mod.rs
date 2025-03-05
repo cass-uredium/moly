@@ -50,7 +50,7 @@
 
 use std::fmt;
 
-mod sys;
+mod platform;
 
 /// Handle capture events and errors for an application.
 pub trait CaptureHandler: 'static + Send + Sync {
@@ -67,11 +67,11 @@ pub trait CaptureHandler: 'static + Send + Sync {
 /// - (macOS) Capture service provider.
 ///
 /// See the [module docs](self) for more information.
-pub fn register_handler<T>(handler: T)
+pub fn register_handler<T>(handler: T) -> Result<(), InitError>
 where
     T: CaptureHandler,
 {
-    sys::register_handler(handler);
+    platform::register_handler(handler)
 }
 
 /// An individual capture event.
