@@ -47,6 +47,7 @@
 //! focused as appropriate, although this behavior is not strictly guaranteed.
 
 use std::fmt;
+use std::sync::{Arc, Mutex};
 
 mod platform;
 
@@ -70,6 +71,7 @@ pub fn register_handler<T>(handler: T) -> Result<(), InitError>
 where
     T: CaptureHandler,
 {
+    let handler = Arc::new(Mutex::new(handler));
     platform::register_handler(handler)
 }
 

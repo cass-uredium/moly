@@ -1,3 +1,5 @@
+use std::sync::{Arc, Mutex};
+
 use objc2::rc::Retained;
 use objc2::{define_class, msg_send, AllocAnyThread, ClassType, DefinedClass, MainThreadMarker};
 use objc2_app_kit::{NSApplication, NSPasteboard, NSPasteboardTypeString};
@@ -5,7 +7,7 @@ use objc2_foundation::{NSObject, NSObjectProtocol, NSString};
 
 use crate::capture::{CaptureEvent, CaptureHandler, CaptureSource, InitError};
 
-pub fn register_handler<T>(handler: T) -> Result<(), InitError>
+pub fn register_handler<T>(handler: Arc<Mutex<T>>) -> Result<(), InitError>
 where
     T: CaptureHandler,
 {
@@ -14,7 +16,7 @@ where
 
     let application = NSApplication::sharedApplication(mtm);
 
-    let service_provider = ServiceProvider::new(Box::from(handler));
+    let service_provider = ServiceProvider::new(handler);
     unsafe {
         application.setServicesProvider(Some(service_provider.as_super()));
     }
@@ -23,7 +25,7 @@ where
 }
 
 struct ServiceProviderIvars {
-    handler: Box<dyn CaptureHandler>,
+    handler: Arc<Mutex<dyn CaptureHandler>>,
 }
 
 define_class!(
@@ -48,17 +50,19 @@ define_class!(
             }
 
             if let Some(contents) = contents {
-                self.ivars().handler.capture(CaptureEvent {
-                    contents: contents.to_string(),
-                    source: CaptureSource::System,
-                });
+                if let Ok(handler) = self.ivars().handler.lock() {
+                    handler.capture(CaptureEvent {
+                        contents: contents.to_string(),
+                        source: CaptureSource::System,
+                    });
+                }
             }
         }
     }
 );
 
 impl ServiceProvider {
-    fn new(handler: Box<dyn CaptureHandler>) -> Retained<Self> {
+    fn new(handler: Arc<Mutex<dyn CaptureHandler>>) -> Retained<Self> {
         let this = Self::alloc().set_ivars(ServiceProviderIvars { handler });
         unsafe { msg_send![super(this), init] }
     }
